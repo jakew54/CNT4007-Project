@@ -6,44 +6,150 @@ import java.util.*;
 
 public class Common {
 
-    private Vector<Peer> peers = new Vector<Peer>();
+    private int numOfPreferredNeighbors;
+    private int unchokingInterval;
+    private int optimisticChokingInterval;
+    private String filename;
+    private int fileSize;
+    private int pieceSize;
+    private int numOfPieces;
+    private int[][] matrix;
+
 
     public Common() {
         readConfigFile("Common.cfg");
     }
 
-    private Vector<Peer> readConfigFile(String file) {
-        BufferedReader reader;
-        try {
-            reader = new BufferedReader(new FileReader(file));
-            String line = reader.readLine();
-            String[] peerInfo = line.split(" ");
-            boolean filePresent = false;
-            if (peerInfo[3].equals("1")){
-                filePresent = true;
-            }
 
-            peers.add(new Peer(peerInfo[0], peerInfo[1],peerInfo[2],filePresent));
+    public int getNumOfPreferredNeighbors() {
+        return numOfPreferredNeighbors;
+    }
 
-            while (line!=null){
-                line = reader.readLine();
+    public void setNumOfPreferredNeighbors(int numOfPreferredNeighbors) {
+        this.numOfPreferredNeighbors = numOfPreferredNeighbors;
+    }
 
-                peerInfo = line.split(" ");
-                filePresent = false;
-                if (peerInfo[3].equals("1")){
-                    filePresent = true;
-                }
+    public int getUnchokingInterval() {
+        return unchokingInterval;
+    }
 
-                peers.add(new Peer(peerInfo[0], peerInfo[1],peerInfo[2],filePresent));
-            }
+    public void setUnchokingInterval(int unchokingInterval) {
+        this.unchokingInterval = unchokingInterval;
+    }
 
-            reader.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+    public int getOptimisticChokingInterval() {
+        return optimisticChokingInterval;
+    }
 
-        return peers;
+    public void setOptimisticChokingInterval(int optimisticChokingInterval) {
+        this.optimisticChokingInterval = optimisticChokingInterval;
+    }
+
+    public String getFilename() {
+        return filename;
+    }
+
+    public void setFilename(String filename) {
+        this.filename = filename;
+    }
+
+    public int getFileSize() {
+        return fileSize;
+    }
+
+    public void setFileSize(int fileSize) {
+        this.fileSize = fileSize;
+    }
+
+    public int getPieceSize() {
+        return pieceSize;
+    }
+
+    public void setPieceSize(int pieceSize) {
+        this.pieceSize = pieceSize;
     }
 
 
+    private void readConfigFile(String file) {
+        BufferedReader reader;
+        try {
+
+
+            reader = new BufferedReader(new FileReader(file));
+            String line = reader.readLine();
+            String[] commonInfo = line.split(" ");
+            String name = commonInfo[0];
+            String value = commonInfo[1];
+
+            if (name.equals("NumberOfPreferredNeighbors")) {
+                setNumOfPreferredNeighbors(Integer.parseInt(value));
+            } else if (name.equals("UnchokingInterval")) {
+                setUnchokingInterval(Integer.parseInt(value));
+
+            } else if (name.equals("OptimisticUnchokingInterval")) {
+                setOptimisticChokingInterval(Integer.parseInt(value));
+
+            } else if (name.equals("FileName")) {
+                setFilename(value);
+
+            } else if (name.equals("FileSize")) {
+                setFileSize(Integer.parseInt(value));
+
+            } else if (name.equals("PieceSize")) {
+                setPieceSize(Integer.parseInt(value));
+            }
+
+            while(line!= null){
+                line = reader.readLine();
+                commonInfo = line.split(" ");
+                name = commonInfo[0];
+                value = commonInfo[1];
+
+                if (name.equals("NumberOfPreferredNeighbors")) {
+                    setNumOfPreferredNeighbors(Integer.parseInt(value));
+                } else if (name.equals("UnchokingInterval")) {
+                    setUnchokingInterval(Integer.parseInt(value));
+
+                } else if (name.equals("OptimisticUnchokingInterval")) {
+                    setOptimisticChokingInterval(Integer.parseInt(value));
+
+                } else if (name.equals("FileName")) {
+                    setFilename(value);
+
+                } else if (name.equals("FileSize")) {
+                    setFileSize(Integer.parseInt(value));
+
+                } else if (name.equals("PieceSize")) {
+                    setPieceSize(Integer.parseInt(value));
+                }
+            }
+
+           numOfPieces = (getFileSize()/getPieceSize()) + 1;
+           matrix = new int[numOfPieces][2];
+
+
+
+
+
+        } catch (IOException e){
+            e.printStackTrace();
+        }
+    }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

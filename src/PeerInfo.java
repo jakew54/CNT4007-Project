@@ -7,9 +7,19 @@ import java.util.*;
 public class PeerInfo {
 
     private Vector<Peer> peers = new Vector<Peer>();
+    private int totalNumOfPeers;
+
 
     public PeerInfo() {
         readConfigFile("PeerInfo.cfg");
+    }
+
+    public int getTotalNumOfPeers(){
+        return totalNumOfPeers;
+    }
+
+    public void setTotalNumOfPeers(int totalNumOfPeers){
+        this.totalNumOfPeers=totalNumOfPeers;
     }
 
     private Vector<Peer> readConfigFile(String file) {
@@ -42,6 +52,7 @@ public class PeerInfo {
             e.printStackTrace();
         }
 
+        setTotalNumOfPeers(peers.size());
         return peers;
     }
 
