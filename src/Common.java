@@ -13,7 +13,6 @@ public class Common {
     private int fileSize;
     private int pieceSize;
     private int numOfPieces;
-    private int[][] matrix;
 
 
     public Common() {
@@ -67,6 +66,14 @@ public class Common {
 
     public void setPieceSize(int pieceSize) {
         this.pieceSize = pieceSize;
+    }
+
+    public int getNumOfPieces() {
+        return numOfPieces;
+    }
+
+    public void setNumOfPieces(int numOfPieces) {
+        this.numOfPieces = numOfPieces;
     }
 
 
@@ -125,7 +132,6 @@ public class Common {
             }
 
            numOfPieces = (getFileSize()/getPieceSize()) + 1;
-           matrix = new int[numOfPieces][2];
 
 
 
