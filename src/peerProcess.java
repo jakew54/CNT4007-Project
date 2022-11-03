@@ -13,6 +13,8 @@ public class peerProcess {
       private static PeerInfo peerInfoObj;
       private static Common commonObj;
       private static boolean isAllPeersDownloaded;
+      private static ObjectOutputStream out; //stream write to socket
+      private static ObjectInputStream in; //stream from from socket
 
       //in functions with clientID and hostID -> clientID refers to the peer MAKING the connection
       // and host ID refers to the peer BEING CONNECTED TO
@@ -159,8 +161,23 @@ public class peerProcess {
         Peer host = peerInfoObj.getPeerWithID(hostID);
         try {
             requestSocket = new Socket(currentPeer.getPeerIP(), peerPortNum);
+            //initialize inputStream and outputStream
+            out = new ObjectOutputStream(requestSocket.getOutputStream());
+            out.flush();
+            in = new ObjectInputStream(requestSocket.getInputStream());
+
+            //get Input from standard input
+            BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(System.in));
+
+
             ServerSocket listener = new ServerSocket(peerPortNum);
             hostSocket = listener.accept();
+            new Handler(hostSocket, 1);
+            //initialize Input and Output streams
+            out = new ObjectOutputStream(hostSocket.getOutputStream());
+            out.flush();
+            in = new ObjectInputStream(hostSocket.getInputStream());
+
             //client connection intialization
             client.updateSocketsWithID(hostID, requestSocket);
             client.setIsHandshakedListWithID(hostID, false);
