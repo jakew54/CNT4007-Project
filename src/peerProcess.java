@@ -8,8 +8,6 @@ import static java.lang.Integer.parseInt;
 public class peerProcess {
       private static Vector<Peer> peers;
       private static int currentPeerID;
-      private static Socket requestSocket;
-      private static Socket hostSocket;
       private static PeerInfo peerInfoObj;
       private static Common commonObj;
       private static boolean isAllPeersDownloaded;
@@ -156,38 +154,52 @@ public class peerProcess {
 
     }
 
-    public static void createSocket(int clientID, int hostID, int peerPortNum, Peer currentPeer) {
+//    public static void createSocket(int clientID, int hostID, int peerPortNum) {
+//        Peer client = peerInfoObj.getPeerWithID(clientID);
+//        Peer host = peerInfoObj.getPeerWithID(hostID);
+//        try {
+//            requestSocket = new Socket(client.getPeerIP(), peerPortNum);
+//            //initialize inputStream and outputStream
+//            out = new ObjectOutputStream(requestSocket.getOutputStream());
+//            out.flush();
+//            in = new ObjectInputStream(requestSocket.getInputStream());
+//
+//            //get Input from standard input
+//            BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(System.in));
+//
+//
+//            ServerSocket listener = new ServerSocket(peerPortNum);
+//            hostSocket = listener.accept();
+//            new Handler(hostSocket, 1);
+//            //initialize Input and Output streams
+//            out = new ObjectOutputStream(hostSocket.getOutputStream());
+//            out.flush();
+//            in = new ObjectInputStream(hostSocket.getInputStream());
+//
+//            //client connection intialization
+//            client.updateSocketsWithID(hostID, requestSocket);
+//            client.setIsHandshakedListWithID(hostID, false);
+//            client.setIsChokedListWithID(hostID, false);
+//            //host connection initialization
+//            host.updateSocketsWithID(clientID, hostSocket);
+//            host.setIsChokedListWithID(clientID, false);
+//
+//        } catch (IOException ioException) {
+//            ioException.printStackTrace();
+//        }
+//    }
+
+    public static void createHandler(int clientID, int hostID, int peerPortNum) {
         Peer client = peerInfoObj.getPeerWithID(clientID);
         Peer host = peerInfoObj.getPeerWithID(hostID);
         try {
-            requestSocket = new Socket(currentPeer.getPeerIP(), peerPortNum);
-            //initialize inputStream and outputStream
-            out = new ObjectOutputStream(requestSocket.getOutputStream());
-            out.flush();
-            in = new ObjectInputStream(requestSocket.getInputStream());
-
-            //get Input from standard input
-            BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(System.in));
-
-
-            ServerSocket listener = new ServerSocket(peerPortNum);
-            hostSocket = listener.accept();
-            new Handler(hostSocket, 1);
-            //initialize Input and Output streams
-            out = new ObjectOutputStream(hostSocket.getOutputStream());
-            out.flush();
-            in = new ObjectInputStream(hostSocket.getInputStream());
-
-            //client connection intialization
-            client.updateSocketsWithID(hostID, requestSocket);
-            client.setIsHandshakedListWithID(hostID, false);
-            client.setIsChokedListWithID(hostID, false);
-            //host connection initialization
-            host.updateSocketsWithID(clientID, hostSocket);
-            host.setIsChokedListWithID(clientID, false);
-
-        } catch (IOException ioException) {
-            ioException.printStackTrace();
+            Socket socket = new Socket(host.getPeerIP(), client.getPeerPortNum());
+            Handler clientHandler = new Handler(socket, hostID, clientID);
+            client.setHandlers(hostID, clientHandler);
+            Handler hostHandler = new Handler(socket, clientID,hostID);
+            host.setHandlers(clientID, hostHandler);
+        } catch (IOException ioE) {
+            ioE.printStackTrace();
         }
     }
 
@@ -243,8 +255,11 @@ public class peerProcess {
         //make connections to all peers that have started before it
         while (currentPeerConnectionID != 1000) {
             //make socket / connection with peer
-            createSocket(currentPeerID, currentPeerConnectionID, currentPeer.getPeerPortNum(), currentPeer);
-            sendMessages();
+            createHandler(currentPeerID, currentPeerConnectionID, currentPeer.getPeerPortNum());
+            //get client handler connected to current peer connection ID and run it
+            peerInfoObj.getPeerWithID(currentPeerID).getHandlers().get(currentPeerConnectionID).start();
+            //get host handler (currentPeerConnectionID) connected to the current peer and run it
+            peerInfoObj.getPeerWithID(currentPeerConnectionID).getHandlers().get(currentPeerConnectionID).start();
         }
         //send messages in while loop -> condition is while (there is still at least one peer without a full file)
         //exchange messages/pieces with connected peers

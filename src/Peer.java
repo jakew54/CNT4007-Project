@@ -18,9 +18,10 @@ public class Peer {
     private int peerPortNum;
     private boolean filePresent;
     private byte[] bitField;
-    private boolean unChoked;
-    private boolean interested;
-    private Map<Integer, Socket> sockets = new HashMap<Integer, Socket>();
+    //private boolean unChoked;
+    //private boolean interested;
+    //private Map<Integer, Socket> sockets = new HashMap<Integer, Socket>();
+    private Map<Integer, Handler> handlers = new HashMap<Integer, Handler>();
     private Vector<Integer> preferredNeighbors = new Vector<>();
     private int optimisticUnchokedNeighborID;
     private Map<Integer, Boolean> isChokedList = new HashMap<Integer, Boolean>();
@@ -140,5 +141,13 @@ public class Peer {
 
     public boolean getIsHandshakedListWithID(int ID) {
         return isHandshakedList.get(ID);
+    }
+
+    public void setHandlers(int ID, Handler handler){
+        handlers.put(ID,handler);
+    }
+
+    public Map<Integer, Handler> getHandlers() {
+        return handlers;
     }
 }
