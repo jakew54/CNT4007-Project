@@ -7,7 +7,6 @@ import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.Vector;
-
 public class Handler extends Thread {
 
     private String message;    //message received from the client
@@ -19,6 +18,8 @@ public class Handler extends Thread {
     private int peerID;		//peerID of peer
     private int myID;
     private static PeerInfo peerInfoObj;
+
+    private static int currentPeerID;
 
     public Handler(Socket connection, int peerID, int myID) {
         this.connection = connection;
@@ -111,7 +112,7 @@ public class Handler extends Thread {
         byte[] handshakeZeroBits = new byte[10];
         Arrays.fill(handshakeZeroBits, (byte) 0);
         Peer currentPeer = peerInfoObj.getPeerWithID(currentPeerID);
-        Map<Integer,Socket> sockets = currentPeer.getSockets();
+        Map<Integer,Handler> sockets = currentPeer.getHandlers();
         if (sockets.size() > 0) {
             //loop through every socket
             for (int i = sockets.size(); i >= 0; i--) {

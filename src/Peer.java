@@ -27,16 +27,20 @@ public class Peer {
     private Map<Integer, Boolean> isChokedList = new HashMap<Integer, Boolean>();
     private Map<Integer, Boolean> isHandshakedList = new HashMap<Integer, Boolean>();
 
+    private ServerSocket myServerSocket;
 
 
 
-    public Peer(int peerID, String peerIP, int peerPortNum, boolean filePresent){
+
+    public Peer(int peerID, String peerIP, int peerPortNum, boolean filePresent) throws IOException {
         this.peerID = peerID;
         this.peerIP = peerIP;
         this.peerPortNum = peerPortNum;
         this.filePresent = filePresent;
+        this.myServerSocket = new ServerSocket(peerPortNum);
     }
 
+    public ServerSocket getMyServerSocket() { return myServerSocket;}
     public int getPeerID() {
         return peerID;
     }
@@ -69,13 +73,13 @@ public class Peer {
         this.filePresent=filePresent;
     }
 
-    public Map<Integer, Socket> getSockets() {
+   /* public Map<Integer, Socket> getSockets() {
         return sockets;
     }
 
     public void updateSocketsWithID(int ID, Socket socket) {
         this.sockets.put(ID, socket);
-    }
+    }*/
 
     public void setBitField(byte[] bitField) {
         this.bitField = bitField;
@@ -85,7 +89,7 @@ public class Peer {
         return bitField;
     }
 
-    public void setUnChoked(boolean unChoked) {
+   /* public void setUnChoked(boolean unChoked) {
         this.unChoked = unChoked;
     }
 
@@ -99,7 +103,7 @@ public class Peer {
 
     public boolean getInterested() {
         return interested;
-    }
+    }*/
 
     public void setPreferredNeighbors(Vector<Integer> preferredNeighbors) {
         this.preferredNeighbors = preferredNeighbors;

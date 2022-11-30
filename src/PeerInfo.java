@@ -1,7 +1,4 @@
-import java.net.*;
 import java.io.*;
-import java.nio.*;
-import java.nio.channels.*;
 import java.util.*;
 
 import static java.lang.Integer.parseInt;
@@ -13,7 +10,7 @@ public class PeerInfo {
 
 
     public PeerInfo() {
-        readConfigFile("PeerInfo.cfg");
+        readConfigFile("libs/PeerInfo.cfg");
     }
 
     public int getTotalNumOfPeers(){
@@ -52,6 +49,9 @@ public class PeerInfo {
 
             while (line!=null){
                 line = reader.readLine();
+                if (line==null){
+                    break;
+                }
 
                 peerInfo = line.split(" ");
                  filePresent = false;

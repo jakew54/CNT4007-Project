@@ -189,14 +189,17 @@ public class peerProcess {
 //        }
 //    }
 
-    public static void createHandler(int clientID, int hostID, int peerPortNum) {
+    public static void createHandler(int clientID, int hostID) {
         Peer client = peerInfoObj.getPeerWithID(clientID);
         Peer host = peerInfoObj.getPeerWithID(hostID);
         try {
-            Socket socket = new Socket(host.getPeerIP(), client.getPeerPortNum());
-            Handler clientHandler = new Handler(socket, hostID, clientID);
+            Socket requestSocket1 = new Socket(host.getPeerIP(),host.getPeerPortNum());
+            Socket socket1 = host.getMyServerSocket().accept();
+            Socket requestSocket2 = new Socket(client.getPeerIP(),client.getPeerPortNum());
+            Socket socket2 = client.getMyServerSocket().accept();
+            Handler clientHandler = new Handler(socket1, hostID, clientID);
             client.setHandlers(hostID, clientHandler);
-            Handler hostHandler = new Handler(socket, clientID,hostID);
+            Handler hostHandler = new Handler(socket2, clientID,hostID);
             host.setHandlers(clientID, hostHandler);
         } catch (IOException ioE) {
             ioE.printStackTrace();
@@ -209,7 +212,7 @@ public class peerProcess {
         byte[] handshakeZeroBits = new byte[10];
         Arrays.fill(handshakeZeroBits, (byte) 0);
         Peer currentPeer = peerInfoObj.getPeerWithID(currentPeerID);
-        Map<Integer,Socket> sockets = currentPeer.getSockets();
+        Map<Integer,Handler> sockets = currentPeer.getHandlers();
         if (sockets.size() > 0) {
             //loop through every socket
             for (int i = sockets.size(); i >= 0; i--) {
@@ -240,8 +243,13 @@ public class peerProcess {
         peerInfoObj = new PeerInfo();
         Peer currentPeer = peerInfoObj.getPeerWithID(peerID);
         commonObj = new Common();
-        int currentPeerConnectionID = peerID - 1;
-        Vector<Socket> sockets = new Vector<>();
+        int currentPeerConnectionID;
+        if (peerID == 1000){
+            currentPeerConnectionID = 1000;
+        }
+        else {
+            currentPeerConnectionID = peerID - 1;
+        }
 
         if (currentPeer.getFilePresent()) { //has file
             byte[] bitField = new byte[commonObj.getNumOfPieces()];
@@ -255,7 +263,7 @@ public class peerProcess {
         //make connections to all peers that have started before it
         while (currentPeerConnectionID != 1000) {
             //make socket / connection with peer
-            createHandler(currentPeerID, currentPeerConnectionID, currentPeer.getPeerPortNum());
+            createHandler(currentPeerID, currentPeerConnectionID);
             //get client handler connected to current peer connection ID and run it
             peerInfoObj.getPeerWithID(currentPeerID).getHandlers().get(currentPeerConnectionID).start();
             //get host handler (currentPeerConnectionID) connected to the current peer and run it
@@ -266,6 +274,7 @@ public class peerProcess {
         boolean temp = true;
         while (!isAllPeersDownloaded) {//(there is still at least one peer without a full file))
             sendMessages();
+            temp=true;
             for (int i = 0; i < peers.size(); i++) {
                 if (!peers.get(i).getFilePresent()) {
                     temp = false;
@@ -282,11 +291,11 @@ public class peerProcess {
 
     public static void main(String[] args) {
         //idk what's going on here
-        PeerInfo peerInfoObj = new PeerInfo();
+
+        peerProcess.peerInfoObj = new PeerInfo();
         peers = peerInfoObj.getPeers();
         currentPeerID = peers.get(0).getPeerID();
-        for (int i = 0; i < peers.size(); i++) {
-            peerProcess(currentPeerID);
-        }
+        createHandler(1001,1002);
+
     }
 }

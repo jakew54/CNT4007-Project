@@ -1,8 +1,4 @@
-import java.net.*;
 import java.io.*;
-import java.nio.*;
-import java.nio.channels.*;
-import java.util.*;
 
 public class Common {
 
@@ -16,7 +12,7 @@ public class Common {
 
 
     public Common() {
-        readConfigFile("Common.cfg");
+        readConfigFile("libs/Common.cfg");
     }
 
 
