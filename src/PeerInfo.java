@@ -10,7 +10,7 @@ public class PeerInfo {
 
 
     public PeerInfo() {
-        readConfigFile("libs/PeerInfo.cfg");
+        readConfigFile("PeerInfo.cfg");
     }
 
     public int getTotalNumOfPeers(){
@@ -45,7 +45,9 @@ public class PeerInfo {
                 filePresent = true;
             }
 
-           peers.add(new Peer(parseInt(peerInfo[0]), peerInfo[1],parseInt(peerInfo[2]),filePresent));
+            Peer tempPeer = new Peer(parseInt(peerInfo[0]), peerInfo[1],parseInt(peerInfo[2]),filePresent);
+
+            peers.add(tempPeer);
 
             while (line!=null){
                 line = reader.readLine();

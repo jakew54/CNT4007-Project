@@ -12,7 +12,7 @@ public class Common {
 
 
     public Common() {
-        readConfigFile("libs/Common.cfg");
+        readConfigFile("Common.cfg");
     }
 
 
@@ -104,6 +104,9 @@ public class Common {
 
             while(line!= null){
                 line = reader.readLine();
+                if (line==null){
+                    break;
+                }
                 commonInfo = line.split(" ");
                 name = commonInfo[0];
                 value = commonInfo[1];

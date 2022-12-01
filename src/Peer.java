@@ -21,6 +21,7 @@ public class Peer {
     //private boolean unChoked;
     //private boolean interested;
     //private Map<Integer, Socket> sockets = new HashMap<Integer, Socket>();
+    private Hashtable<Integer, Peer> peerMap = new Hashtable<Integer, Peer>();
     private Map<Integer, Handler> handlers = new HashMap<Integer, Handler>();
     private Vector<Integer> preferredNeighbors = new Vector<>();
     private int optimisticUnchokedNeighborID;
@@ -73,13 +74,13 @@ public class Peer {
         this.filePresent=filePresent;
     }
 
-   /* public Map<Integer, Socket> getSockets() {
-        return sockets;
+    public void setPeerMap(Hashtable<Integer, Peer> peers) {
+        this.peerMap = peers;
     }
 
-    public void updateSocketsWithID(int ID, Socket socket) {
-        this.sockets.put(ID, socket);
-    }*/
+    public Hashtable<Integer, Peer> getPeerMap() {
+        return this.peerMap;
+    }
 
     public void setBitField(byte[] bitField) {
         this.bitField = bitField;

@@ -8,15 +8,15 @@ The program consists of two java files.
   RemotePeerInfo.java: This is the class for storing peer infomation.
 
 Before using them, I recommend that you should look at the codes. 
-Make sure that your peerProcess name is the same as the one used in this program.
-If your peerProcess is written in C or C++, you must modify the StartRemotePeers.java file
+Make sure that your peerProcess1 name is the same as the one used in this program.
+If your peerProcess1 is written in C or C++, you must modify the StartRemotePeers.java file
 a little bit as described in the file.
 
 The procedure to use this program is as follows.
 
 1. Modify the StartRemotePeers.java appropriately if needed.
 
-2. Copy *.java and compileJava files to your working directory where your peerProcess resides.
+2. Copy *.java and compileJava files to your working directory where your peerProcess1 resides.
 
 3. Compile the java files as follows:
   ./compileJava
