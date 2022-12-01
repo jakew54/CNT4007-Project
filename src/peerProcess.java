@@ -242,6 +242,8 @@ public class peerProcess {
         //initialize peer with PeerInfo and Common properties
         peerInfoObj = new PeerInfo();
         Peer currentPeer = peerInfoObj.getPeerWithID(peerID);
+        peers = peerInfoObj.getPeers();
+        currentPeerID = peerID;
         commonObj = new Common();
         int currentPeerConnectionID;
         if (peerID == 1000){
@@ -292,9 +294,9 @@ public class peerProcess {
     public static void main(String[] args) {
         //idk what's going on here
 
-        peerProcess.peerInfoObj = new PeerInfo();
-        peers = peerInfoObj.getPeers();
-        currentPeerID = peers.get(0).getPeerID();
+
+
+
         createHandler(1001,1002);
 
     }

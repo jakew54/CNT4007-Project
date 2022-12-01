@@ -70,5 +70,16 @@ public class PeerInfo {
         setTotalNumOfPeers(peers.size());
         return;
     }
+
+    public static void main(String[] args) {
+        PeerInfo obj = new PeerInfo();
+        Vector<Peer> test1 = obj.getPeers();
+       for (int i = 0; i < test1.size(); i++){
+           System.out.print("Peer ID: " + test1.get(i).getFilePresent());
+       }
+
+
+    }
 }
+
 
