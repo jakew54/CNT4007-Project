@@ -9,6 +9,7 @@ public class Common {
     private int fileSize;
     private int pieceSize;
     private int numOfPieces;
+    private int bitFieldSize;
 
 
     public Common() {
@@ -72,6 +73,10 @@ public class Common {
         this.numOfPieces = numOfPieces;
     }
 
+    public int getBitFieldSize() {
+        return bitFieldSize;
+    }
+
 
     private void readConfigFile(String file) {
         BufferedReader reader;
@@ -130,8 +135,11 @@ public class Common {
                 }
             }
 
-           numOfPieces = (getFileSize()/getPieceSize()) + 1;
-
+            numOfPieces = (getFileSize()/getPieceSize()) + 1;
+            bitFieldSize = numOfPieces / 8;
+            if (numOfPieces % 8 != 0) {
+                bitFieldSize += 1;
+            }
 
 
 

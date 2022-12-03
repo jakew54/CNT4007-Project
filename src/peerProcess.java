@@ -11,6 +11,7 @@ public class peerProcess {
         int peerID;
 
         for (int i = 0; i < peerInfo.getPeers().size(); i++) {
+            peerInfo.getPeers().get(i).createBitField(commonInfo.getBitFieldSize(), commonInfo.getNumOfPieces());
             peers.put(peerInfo.getPeers().get(i).getPeerID(), peerInfo.getPeers().get(i));
         }
 

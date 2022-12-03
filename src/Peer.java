@@ -18,6 +18,7 @@ public class Peer {
     private int peerPortNum;
     private boolean filePresent;
     private byte[] bitField;
+    private byte[][] fileData; //first index is byte in bitfield, second index is bit within that byte
     //private boolean unChoked;
     //private boolean interested;
     //private Map<Integer, Socket> sockets = new HashMap<Integer, Socket>();
@@ -39,6 +40,23 @@ public class Peer {
         this.peerPortNum = peerPortNum;
         this.filePresent = filePresent;
         this.myServerSocket = new ServerSocket(peerPortNum);
+    }
+
+    public void createBitField(int size, int numPieces) {
+        bitField = new byte[size];
+        if (filePresent) {
+            for (int i = 0; i < size - 1; i++) {
+                for (int j = 0; j < 8; j++) {
+                    bitField[i] = (byte) (bitField[i] | (1 << j));
+                }
+            }
+            if ((size * 8) > numPieces) {
+                int extraBitsNum = (size * 8) - numPieces;
+                for (int i = 0; i < extraBitsNum; i++) {
+                    bitField[size-1] = (byte) (bitField[size-1] & ~(1 << i));
+                }
+            }
+        }
     }
 
     public ServerSocket getMyServerSocket() { return myServerSocket;}

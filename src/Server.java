@@ -25,6 +25,9 @@ public class Server implements Runnable {
                 out = new ObjectOutputStream(acceptedSocket.getOutputStream());
                 out.flush();
                 in = new ObjectInputStream(acceptedSocket.getInputStream());
+                MessageManager msgManager = new MessageManager(peer, out, in);
+                Thread msgThread = new Thread(msgManager);
+                msgThread.start();
 
             }
         } catch (IOException e) {
