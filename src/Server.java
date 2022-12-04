@@ -21,11 +21,15 @@ public class Server implements Runnable {
         }
         try {
             while (true) {
+                System.out.println("entered while loop of Server");
                 acceptedSocket = serverSocket.accept();
+                System.out.println("Accepts socket");
                 out = new ObjectOutputStream(acceptedSocket.getOutputStream());
                 out.flush();
                 in = new ObjectInputStream(acceptedSocket.getInputStream());
+                System.out.println("Creates out and in for server");
                 MessageManager msgManager = new MessageManager(peer, out, in);
+                System.out.println("Made msg Manager for server");
                 Thread msgThread = new Thread(msgManager);
                 msgThread.start();
 

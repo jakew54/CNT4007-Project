@@ -18,6 +18,10 @@ public class Client {
             out = new ObjectOutputStream(requestSocket.getOutputStream());
             out.flush();
             in = new ObjectInputStream(requestSocket.getInputStream());
+            MessageManager msgManager = new MessageManager(peer, out, in);
+            System.out.println("Made msg Manager for client");
+            Thread msgThread = new Thread(msgManager);
+            msgThread.start();
 
 
         } catch (UnknownHostException e) {

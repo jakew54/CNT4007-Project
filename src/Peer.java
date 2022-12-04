@@ -23,13 +23,13 @@ public class Peer {
     //private boolean interested;
     //private Map<Integer, Socket> sockets = new HashMap<Integer, Socket>();
     private Hashtable<Integer, Peer> peerMap = new Hashtable<Integer, Peer>();
-    private Map<Integer, Handler> handlers = new HashMap<Integer, Handler>();
+
     private Vector<Integer> preferredNeighbors = new Vector<>();
     private int optimisticUnchokedNeighborID;
     private Map<Integer, Boolean> isChokedList = new HashMap<Integer, Boolean>();
     private Map<Integer, Boolean> isHandshakedList = new HashMap<Integer, Boolean>();
 
-    private ServerSocket myServerSocket;
+    //private ServerSocket myServerSocket;
 
 
 
@@ -39,7 +39,7 @@ public class Peer {
         this.peerIP = peerIP;
         this.peerPortNum = peerPortNum;
         this.filePresent = filePresent;
-        this.myServerSocket = new ServerSocket(peerPortNum);
+
     }
 
     public void createBitField(int size, int numPieces) {
@@ -59,7 +59,7 @@ public class Peer {
         }
     }
 
-    public ServerSocket getMyServerSocket() { return myServerSocket;}
+
     public int getPeerID() {
         return peerID;
     }
@@ -166,11 +166,5 @@ public class Peer {
         return isHandshakedList.get(ID);
     }
 
-    public void setHandlers(int ID, Handler handler){
-        handlers.put(ID,handler);
-    }
 
-    public Map<Integer, Handler> getHandlers() {
-        return handlers;
-    }
 }

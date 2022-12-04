@@ -75,13 +75,19 @@ public class MessageManager implements Runnable{
     }
 
     public void run() {
-        //handshake message
-        byte[] handShakeMsg = new byte[32];
-        String handShakeString = "P2PFILESHARINGPROJ";
-        byte[] handShake1 = handShakeString.getBytes(StandardCharsets.UTF_8);
-        byte[] handShake2 = new byte[10];
-        byte[] handShake3 = ByteBuffer.allocate(4).putInt(peer.getPeerID()).array();
+        try {
+            System.out.println("Entered run of Message Manager");
+            //handshake message
+            byte[] handShakeMsg = new byte[32];
+            System.out.println("create 32 bytes");
+            String handShakeString = "P2PFILESHARINGPROJ";
+            byte[] handShake1 = handShakeString.getBytes();
+            System.out.println("sets up handShake1");
+            byte[] handShake2 = new byte[10];
+            byte[] handShake3 = ByteBuffer.allocate(4).putInt(peer.getPeerID()).array();
+            System.out.println("done with creating handShake 2 and 3");
         for (int i = 0; i < 32; i++) {
+            System.out.println("Enters for loop");
             if (i < 18) {
                 handShakeMsg[i] = handShake1[i];
             } else if (i < 28) {
@@ -91,58 +97,63 @@ public class MessageManager implements Runnable{
             }
         }
         sendMessage(handShakeMsg);
-        int currMsgType = -1;
-        while (!doAllHaveFile()) {
-            try {
-                byte[] inputMsg = (byte[]) in.readObject();
-                currMsgType = inputMsg[4];
-                switch (currMsgType) {
-                    case 0:
-                        //choke
+        System.out.println("Sends message");
+            int currMsgType = -1;
+            while (!doAllHaveFile()) {
+                try {
+                    byte[] inputMsg = (byte[]) in.readObject();
+                    currMsgType = inputMsg[4];
+                    switch (currMsgType) {
+                        case 0:
+                            //choke
 
-                        break;
-                    case 1:
-                        //unchoke
-                        break;
-                    case 2:
-                        //interested
-                        break;
-                    case 3:
-                        //not interested
-                        break;
-                    case 4:
-                        //have
-                        break;
-                    case 5:
-                        //bitfield
-                        break;
-                    case 6:
-                        //request
-                        break;
-                    case 7:
-                        //piece
-                        break;
-                    default:
-                        //handshake
-                        String possibleHandshakeHeader = inputMsg.toString();
-                        String handShakeBeginning = possibleHandshakeHeader.substring(0, 18);
-                        connectedPeerID = Integer.parseInt(possibleHandshakeHeader.substring(28));
-                        if (handShakeBeginning == "P2PFILESHARINGPROJ") {
-                            System.out.println("Handshake is good for peer#" + peer.getPeerID() + " with peer#" + connectedPeerID + "!");
-                            //send bitfield msg
-                            if (peer.getFilePresent()) {
-                                sendMessage(createMessage(5));
+                            break;
+                        case 1:
+                            //unchoke
+                            break;
+                        case 2:
+                            //interested
+                            break;
+                        case 3:
+                            //not interested
+                            break;
+                        case 4:
+                            //have
+                            break;
+                        case 5:
+                            //bitfield
+                            break;
+                        case 6:
+                            //request
+                            break;
+                        case 7:
+                            //piece
+                            break;
+                        default:
+                            //handshake
+                            String possibleHandshakeHeader = inputMsg.toString();
+                            String handShakeBeginning = possibleHandshakeHeader.substring(0, 18);
+                            connectedPeerID = Integer.parseInt(possibleHandshakeHeader.substring(28));
+                            if (handShakeBeginning == "P2PFILESHARINGPROJ") {
+                                System.out.println("Handshake is good for peer#" + peer.getPeerID() + " with peer#" + connectedPeerID + "!");
+                                //send bitfield msg
+                                if (peer.getFilePresent()) {
+                                    sendMessage(createMessage(5));
+                                }
                             }
-                        }
-                        break;
+                            break;
+                    }
+                } catch (IOException ioE) {
+                    System.err.println("IOexception oh no");
+                } catch (ClassNotFoundException cnfE) {
+                    System.err.println("ClassNotFoundException darnit");
                 }
-            } catch (IOException ioE) {
-                System.err.println("IOexception oh no");
-            } catch (ClassNotFoundException cnfE) {
-                System.err.println("ClassNotFoundException darnit");
             }
+        }catch(Exception e){
+            System.out.println("Catch error");
+            e.printStackTrace();
+            //close any threads or whatever are still running (cleanup)
         }
-        //close any threads or whatever are still running (cleanup)
     }
 
 }
