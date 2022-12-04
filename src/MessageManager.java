@@ -1,3 +1,4 @@
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -36,29 +37,61 @@ public class MessageManager implements Runnable{
         } catch (IOException e) {
             e.printStackTrace();
         }
+        return;
     }
 
     private byte[] createMessage(int messageType) {
         byte[] msg = new byte[0];
+        byte[] messageLength, messageTypeArr, messagePayload;
+        ByteArrayOutputStream outByte;
         switch(messageType) {
             case 0:
                 //choke
-                break;
             case 1:
                 //unchoke
-                break;
             case 2:
                 //interested
-                break;
             case 3:
                 //not interested
+                outByte = new ByteArrayOutputStream();
+                messageLength = new byte[4];
+                messageLength =  ByteBuffer.allocate(4).putInt(1).array();
+
+                messageTypeArr = new byte[1];
+                messageTypeArr[0] = (byte) messageType;
+
+                try {
+                    outByte.write(messageLength);
+                    outByte.write(messageTypeArr);
+                    outByte.close();
+                    return outByte.toByteArray();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
                 break;
             case 4:
                 //have
                 break;
             case 5:
                 //bitfield
-                
+                outByte = new ByteArrayOutputStream();
+                messageLength = new byte[4];
+                messageLength =  ByteBuffer.allocate(4).putInt(1 + peer.getBitField().length).array();
+
+                messageTypeArr = new byte[1];
+                messageTypeArr[0] = (byte) messageType;
+
+                messagePayload = peer.getBitField();
+
+                try {
+                    outByte.write(messageLength);
+                    outByte.write(messageTypeArr);
+                    outByte.write(messagePayload);
+                    outByte.close();
+                    return outByte.toByteArray();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
                 break;
             case 6:
                 //request

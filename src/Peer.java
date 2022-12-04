@@ -19,9 +19,14 @@ public class Peer {
     private boolean filePresent;
     private byte[] bitField;
     private byte[][] fileData; //first index is byte in bitfield, second index is bit within that byte
-    //private boolean unChoked;
-    //private boolean interested;
-    //private Map<Integer, Socket> sockets = new HashMap<Integer, Socket>();
+    private int numPreferredNeighbors;
+    private int unchokingInterval;
+    private int optimisticUnchokingInterval;
+    private String fileName;
+    private int fileSize;
+    private int pieceSize;
+
+
     private Hashtable<Integer, Peer> peerMap = new Hashtable<Integer, Peer>();
     private Map<Integer, Handler> handlers = new HashMap<Integer, Handler>();
     private Vector<Integer> preferredNeighbors = new Vector<>();
@@ -29,7 +34,6 @@ public class Peer {
     private Map<Integer, Boolean> isChokedList = new HashMap<Integer, Boolean>();
     private Map<Integer, Boolean> isHandshakedList = new HashMap<Integer, Boolean>();
 
-    private ServerSocket myServerSocket;
 
 
 
@@ -39,7 +43,6 @@ public class Peer {
         this.peerIP = peerIP;
         this.peerPortNum = peerPortNum;
         this.filePresent = filePresent;
-        this.myServerSocket = new ServerSocket(peerPortNum);
     }
 
     public void createBitField(int size, int numPieces) {
@@ -59,7 +62,18 @@ public class Peer {
         }
     }
 
-    public ServerSocket getMyServerSocket() { return myServerSocket;}
+    public void setBitField(byte[] bitField) {
+        this.bitField = bitField;
+    }
+
+    public byte[] getBitField() {
+        return bitField;
+    }
+
+    public void calculatePreferredNeighbors() {
+
+    }
+
     public int getPeerID() {
         return peerID;
     }
@@ -100,15 +114,55 @@ public class Peer {
         return this.peerMap;
     }
 
-    public void setBitField(byte[] bitField) {
-        this.bitField = bitField;
+    public void setNumPreferredNeighbors(int numPreferredNeighbors) {
+        this.numPreferredNeighbors = numPreferredNeighbors;
     }
 
-    public byte[] getBitField() {
-        return bitField;
+    public int getNumPreferredNeighbors() {
+        return numPreferredNeighbors;
     }
 
-   /* public void setUnChoked(boolean unChoked) {
+    public void setUnchokingInterval(int unchokingInterval) {
+        this.unchokingInterval = unchokingInterval;
+    }
+
+    public int getUnchokingInterval() {
+        return unchokingInterval;
+    }
+
+    public void setOptimisticUnchokingInterval(int optimisticUnchokingInterval) {
+        this.optimisticUnchokingInterval = optimisticUnchokingInterval;
+    }
+
+    public int getOptimisticUnchokingInterval() {
+        return optimisticUnchokingInterval;
+    }
+
+    public void setFileName(String fileName) {
+        this.fileName = new String(fileName);
+    }
+
+    public String getFileName() {
+        return fileName;
+    }
+
+    public void setFileSize(int fileSize) {
+        this.fileSize = fileSize;
+    }
+
+    public int getFileSize() {
+        return fileSize;
+    }
+
+    public void setPieceSize(int pieceSize) {
+        this.pieceSize = pieceSize;
+    }
+
+    public int getPieceSize() {
+        return pieceSize;
+    }
+
+    /* public void setUnChoked(boolean unChoked) {
         this.unChoked = unChoked;
     }
 
@@ -158,19 +212,4 @@ public class Peer {
         return total;
     }
 
-    public void setIsHandshakedListWithID(int ID, boolean isHandshaked) {
-        this.isHandshakedList.put(ID,isHandshaked);
-    }
-
-    public boolean getIsHandshakedListWithID(int ID) {
-        return isHandshakedList.get(ID);
-    }
-
-    public void setHandlers(int ID, Handler handler){
-        handlers.put(ID,handler);
-    }
-
-    public Map<Integer, Handler> getHandlers() {
-        return handlers;
-    }
 }
