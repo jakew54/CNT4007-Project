@@ -25,11 +25,13 @@ public class Peer {
     private String fileName;
     private int fileSize;
     private int pieceSize;
+    private int numBytesDownloadedInInterval;
 
 
     private Hashtable<Integer, Peer> peerMap = new Hashtable<Integer, Peer>();
-    private Map<Integer, Handler> handlers = new HashMap<Integer, Handler>();
+    private Vector<Integer> interestedNeighbors = new Vector<>();
     private Vector<Integer> preferredNeighbors = new Vector<>();
+    private HashMap<Integer, byte[]> neighborBitfields = new HashMap<>();
     private int optimisticUnchokedNeighborID;
     private Map<Integer, Boolean> isChokedList = new HashMap<Integer, Boolean>();
     private Map<Integer, Boolean> isHandshakedList = new HashMap<Integer, Boolean>();
@@ -43,6 +45,7 @@ public class Peer {
         this.peerIP = peerIP;
         this.peerPortNum = peerPortNum;
         this.filePresent = filePresent;
+        this.numBytesDownloadedInInterval = 0;
     }
 
     public void createBitField(int size, int numPieces) {
@@ -70,8 +73,49 @@ public class Peer {
         return bitField;
     }
 
-    public void calculatePreferredNeighbors() {
+    public void addInterestedNeighbor(int interestedPeerID) {
+        if (!(interestedNeighbors.contains(interestedPeerID))) {
+            interestedNeighbors.add(interestedPeerID);
+        }
+    }
 
+    public void removeInterestedNeighbor(int nonInterestedPeerID) {
+        if (interestedNeighbors.contains(nonInterestedPeerID)) {
+            interestedNeighbors.remove(nonInterestedPeerID);
+        }
+    }
+
+    public void calculatePreferredNeighbors() {
+        int time = 0; //idk how to calculate time yet
+
+    }
+
+    public void addNeighborBitfield(int neighborID) {
+        int numOfPieces = (getFileSize()/getPieceSize()) + 1;
+        int bitFieldSize = numOfPieces / 8;
+        if (numOfPieces % 8 != 0) {
+            bitFieldSize += 1;
+        }
+        byte[] bitFieldTemp = new byte[bitFieldSize];
+        neighborBitfields.put(neighborID, bitFieldTemp);
+    }
+
+    public void setNeighborBitfields(int neighborID, byte[] givenBitfield) {
+        neighborBitfields.put(neighborID, givenBitfield);
+    }
+
+    public void updateNeighborBitfield(int neighborID, int pieceIndex) {
+        int pieceIndex1 = pieceIndex / 8;
+        int pieceIndex2 = pieceIndex % 8;
+        neighborBitfields.get(neighborID)[pieceIndex1] = (byte) (bitField[pieceIndex1] | (1 << pieceIndex2));
+    }
+
+    public boolean checkIfNeighborBitfieldExists(int neighborID) {
+        if (neighborBitfields.containsKey(neighborID)) {
+            return true;
+        } else {
+            return false;
+        }
     }
 
     public int getPeerID() {

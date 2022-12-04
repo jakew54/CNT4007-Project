@@ -5,6 +5,7 @@ import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.Map;
 
 public class MessageManager implements Runnable{
@@ -152,9 +153,22 @@ public class MessageManager implements Runnable{
                             break;
                         case 4:
                             //have
+                            int haveMsgSize = ByteBuffer.wrap(Arrays.copyOfRange(inputMsg, 1, 2)).getInt();
+                            int haveIndex = ByteBuffer.wrap(Arrays.copyOfRange(inputMsg, 5, haveMsgSize)).getInt();
+                            logManager.createLog(peer.getPeerID(), connectedPeerID, "receiveHave", haveIndex);
+                            if (peer.checkIfNeighborBitfieldExists(connectedPeerID)) {
+                                peer.updateNeighborBitfield(connectedPeerID, haveIndex);
+                            } else {
+                                //bitfield message is sent directly after handshake message
+                                //however, if filePresent = false, that peer does not have to send a bitfield message
+                                //so a peer may not exist in the neighborBitfield map
+                                peer.addNeighborBitfield(connectedPeerID);
+                            }
                             break;
                         case 5:
                             //bitfield
+                            String bitFieldInput = inputMsg.toString();
+                            int bitFieldMsgSize = ByteBuffer.wrap(bitFieldInput.substring(1,5).getBytes(StandardCharsets.UTF_8)).getInt();
                             break;
                         case 6:
                             //request
