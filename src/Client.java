@@ -23,6 +23,9 @@ public class Client {
             Thread msgThread = new Thread(msgManager);
             msgThread.start();
 
+            MessageManager msgManager = new MessageManager(peer, out, in);
+            Thread msgThread = new Thread(msgManager);
+            msgThread.start();
 
         } catch (UnknownHostException e) {
             System.err.println("Connecting to an unknown host (Client.java)");

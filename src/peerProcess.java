@@ -9,9 +9,16 @@ public class peerProcess {
         PeerInfo peerInfo = new PeerInfo();
         Common commonInfo = new Common();
         int peerID;
-
+        Peer tempPeer;
         for (int i = 0; i < peerInfo.getPeers().size(); i++) {
-            peerInfo.getPeers().get(i).createBitField(commonInfo.getBitFieldSize(), commonInfo.getNumOfPieces());
+            tempPeer = peerInfo.getPeers().get(i);
+            tempPeer.createBitField(commonInfo.getBitFieldSize(), commonInfo.getNumOfPieces());
+            tempPeer.setNumPreferredNeighbors(commonInfo.getNumOfPreferredNeighbors());
+            tempPeer.setUnchokingInterval(commonInfo.getUnchokingInterval());
+            tempPeer.setOptimisticUnchokingInterval(commonInfo.getOptimisticChokingInterval());
+            tempPeer.setFileName(commonInfo.getFilename());
+            tempPeer.setFileSize(commonInfo.getFileSize());
+            tempPeer.setPieceSize(commonInfo.getPieceSize());
             peers.put(peerInfo.getPeers().get(i).getPeerID(), peerInfo.getPeers().get(i));
         }
 
