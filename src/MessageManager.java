@@ -122,7 +122,7 @@ public class MessageManager implements Runnable{
                 //piece
                 break;
             default:
-                System.out.println("wrong message type dumbass");
+                System.out.println("Invalid message type when trying to create message.");
                 break;
         }
 
@@ -148,14 +148,17 @@ public class MessageManager implements Runnable{
                             break;
                         case 2:
                             //interested
+                            logManager.createLog(peer.getPeerID(), connectedPeerID, "receiveInterested", 1);
                             break;
                         case 3:
                             //not interested
+                            logManager.createLog(peer.getPeerID(), connectedPeerID, "receiveNotInterested", 1);
                             break;
                         case 4:
                             //have
-                            /*int haveMsgSize = ByteBuffer.wrap(Arrays.copyOfRange(inputMsg, 1, 2)).getInt();
-                            int haveIndex = ByteBuffer.wrap(Arrays.copyOfRange(inputMsg, 5, haveMsgSize)).getInt();
+                            logManager.createLog(peer.getPeerID(), connectedPeerID, "receiveHave", 1);
+                            int haveMsgSize = ByteBuffer.wrap(Arrays.copyOfRange(inputMsg, 0, 4)).getInt();
+                            int haveIndex = ByteBuffer.wrap(Arrays.copyOfRange(inputMsg, 5, inputMsg.length)).getInt();
                             logManager.createLog(peer.getPeerID(), connectedPeerID, "receiveHave", haveIndex);
                             if (peer.checkIfNeighborBitfieldExists(connectedPeerID)) {
                                 peer.updateNeighborBitfield(connectedPeerID, haveIndex);
@@ -164,12 +167,31 @@ public class MessageManager implements Runnable{
                                 //however, if filePresent = false, that peer does not have to send a bitfield message
                                 //so a peer may not exist in the neighborBitfield map
                                 peer.addNeighborBitfield(connectedPeerID);
-                            }*/
+                                peer.updateNeighborBitfield(connectedPeerID, haveIndex);
+                            }
+                            //check if you want it
+                            if (peer.checkIfPeerHasPieceAtIndex(haveIndex)) {
+                                //not interested - already has piece
+                                sendMessage(createMessage(3));
+                            } else {
+                                //interested
+                                sendMessage(createMessage(2));
+                            }
                             break;
                         case 5:
                             //bitfield
-                            String bitFieldInput = inputMsg.toString();
-                            int bitFieldMsgSize = ByteBuffer.wrap(bitFieldInput.substring(1,5).getBytes(StandardCharsets.UTF_8)).getInt();
+                            logManager.createLog(peer.getPeerID(), connectedPeerID, "receiveBitfield", 1);
+                            int bitFieldMsgSize = ByteBuffer.wrap(Arrays.copyOfRange(inputMsg, 0, 4)).getInt();
+                            byte[] neighborBitFieldGiven = new byte[bitFieldMsgSize - 1];
+                            ByteBuffer.wrap(Arrays.copyOfRange(inputMsg, 5, inputMsg.length)).get(neighborBitFieldGiven, 0, neighborBitFieldGiven.length);
+                            peer.setNeighborBitfields(connectedPeerID, neighborBitFieldGiven);
+                            if (peer.checkNeighborBitfieldForInterestingPieces(connectedPeerID)) {
+                                //contains at least 1 interesting piece
+                                sendMessage(createMessage(2));
+                            } else {
+                                //bitfields are the same - no interesting pieces
+                                sendMessage(createMessage(3));
+                            }
                             break;
                         case 6:
                             //request

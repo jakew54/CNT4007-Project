@@ -62,7 +62,7 @@ public class Peer {
                     bitField[size-1] = (byte) (bitField[size-1] & ~(1 << i));
                 }
             }
-        }
+        } //0 is default value so we dont have to do anything with !filePresent
     }
 
     public void setBitField(byte[] bitField) {
@@ -105,8 +105,8 @@ public class Peer {
     }
 
     public void updateNeighborBitfield(int neighborID, int pieceIndex) {
-        int pieceIndex1 = pieceIndex / 8;
-        int pieceIndex2 = pieceIndex % 8;
+        int pieceIndex1 = pieceIndex / 8; //determines which byte in bitfield pieceIndex is in
+        int pieceIndex2 = pieceIndex % 8; //determines which bit within that byte pieceIndex is
         neighborBitfields.get(neighborID)[pieceIndex1] = (byte) (bitField[pieceIndex1] | (1 << pieceIndex2));
     }
 
@@ -116,6 +116,23 @@ public class Peer {
         } else {
             return false;
         }
+    }
+
+    public boolean checkIfPeerHasPieceAtIndex(int pieceIndex) {
+        int pieceIndex1 = pieceIndex / 8; //determines which byte in bitfield pieceIndex is in
+        int pieceIndex2 = pieceIndex % 8; //determines which bit within that byte pieceIndex is
+        return (bitField[pieceIndex1] >> pieceIndex2 & 1) == 1;
+    }
+
+    public boolean checkNeighborBitfieldForInterestingPieces(int neighborID) {
+        for (int i = 0; i < bitField.length; i++) {
+            for (int j = 0; j < 8; j++) {
+                if((bitField[i] >> j & 1) != ((neighborBitfields.get(neighborID))[i] >> j & 1)) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     public int getPeerID() {

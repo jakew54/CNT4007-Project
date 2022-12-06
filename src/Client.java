@@ -15,11 +15,10 @@ public class Client {
     public void connectPeer() {
         try {
             Socket requestSocket = new Socket(hostPeer.getPeerIP(), hostPeer.getPeerPortNum());
+            in = new ObjectInputStream(requestSocket.getInputStream());
             out = new ObjectOutputStream(requestSocket.getOutputStream());
             out.flush();
-            in = new ObjectInputStream(requestSocket.getInputStream());
             MessageManager msgManager = new MessageManager(peer, out, in);
-            System.out.println("Made msg Manager for client");
             Thread msgThread = new Thread(msgManager);
             msgThread.start();
 
