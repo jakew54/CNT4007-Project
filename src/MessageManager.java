@@ -43,7 +43,7 @@ public class MessageManager implements Runnable{
     }
 
     private byte[] handShake() {
-
+        System.out.println("Enters handShake()");
         //handshake message
         byte[] handShakeMsg = new byte[32];
         String handShakeString = new String("P2PFILESHARINGPROJ");
@@ -130,6 +130,7 @@ public class MessageManager implements Runnable{
     }
 
     public void run() {
+        System.out.println("Enters msg manager run()");
         try {
             byte[] handShakeMsg = handShake();
             sendMessage(handShakeMsg);
@@ -201,6 +202,7 @@ public class MessageManager implements Runnable{
                             break;
                         default:
                             //handshake
+                            System.out.println("Enters default of Switch for handshake ");
                             byte[] possibleHandshakeHeader = Arrays.copyOfRange(inputMsg, 0, 18);
                             connectedPeerID = ByteBuffer.wrap(Arrays.copyOfRange(inputMsg, 28,32)).getInt();
                             String handshakerHeaderString = new String(possibleHandshakeHeader, StandardCharsets.UTF_8);

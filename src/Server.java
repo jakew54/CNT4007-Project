@@ -9,6 +9,7 @@ public class Server implements Runnable {
     private ObjectOutputStream out;
 
     private ServerSocket createServerSocket(Peer serverPeer) {
+        System.out.println("Enters createServerSocket function");
         try {
             ServerSocket ss = new ServerSocket(serverPeer.getPeerPortNum());
             return ss;
@@ -24,16 +25,23 @@ public class Server implements Runnable {
     }
 
     public void run() {
-        serverSocket = createServerSocket(peer);
+        System.out.println("Enters run() of Server...");
+       serverSocket = createServerSocket(peer);
         try {
+
             while (true) {
+                System.out.println("Enters while loop");
                 acceptedSocket = serverSocket.accept();
-                in = new ObjectInputStream(acceptedSocket.getInputStream());
+                System.out.println("Completes acceptedSocket");
                 out = new ObjectOutputStream(acceptedSocket.getOutputStream());
                 out.flush();
+                in = new ObjectInputStream(acceptedSocket.getInputStream());
+                System.out.println("Done with creating in and out");
                 MessageManager msgManager = new MessageManager(peer, out, in);
+                System.out.println("Done with creating msg manager");
                 Thread msgThread = new Thread(msgManager);
                 msgThread.start();
+                System.out.println("Starts msgThread");
             }
         } catch (IOException e) {
             System.err.println("serverSocket.accept() IO error (Server.java)");
