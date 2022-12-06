@@ -7,6 +7,7 @@ import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Map;
+import java.util.Objects;
 
 public class MessageManager implements Runnable{
     private Peer peer;
@@ -42,18 +43,14 @@ public class MessageManager implements Runnable{
     }
 
     private byte[] handShake() {
-        System.out.println("Entered handShake()");
+
         //handshake message
         byte[] handShakeMsg = new byte[32];
-        System.out.println("create 32 bytes");
         String handShakeString = new String("P2PFILESHARINGPROJ");
         byte[] handShake1 = handShakeString.getBytes();
-        System.out.println("sets up handShake1");
         byte[] handShake2 = new byte[10];
         byte[] handShake3 = ByteBuffer.allocate(4).putInt(peer.getPeerID()).array();
-        System.out.println("done with creating handShake 2 and 3");
         for (int i = 0; i < 32; i++) {
-            System.out.println("Enters for loop");
             if (i < 18) {
                 handShakeMsg[i] = handShake1[i];
             } else if (i < 28) {
@@ -134,11 +131,8 @@ public class MessageManager implements Runnable{
 
     public void run() {
         try {
-            System.out.println("Entered run of msg");
             byte[] handShakeMsg = handShake();
-            System.out.println("Passed handshake()");
             sendMessage(handShakeMsg);
-            System.out.println("Sends message");
             int currMsgType = -1;
             while (!doAllHaveFile()) {
                 try {
@@ -160,7 +154,7 @@ public class MessageManager implements Runnable{
                             break;
                         case 4:
                             //have
-                            int haveMsgSize = ByteBuffer.wrap(Arrays.copyOfRange(inputMsg, 1, 2)).getInt();
+                            /*int haveMsgSize = ByteBuffer.wrap(Arrays.copyOfRange(inputMsg, 1, 2)).getInt();
                             int haveIndex = ByteBuffer.wrap(Arrays.copyOfRange(inputMsg, 5, haveMsgSize)).getInt();
                             logManager.createLog(peer.getPeerID(), connectedPeerID, "receiveHave", haveIndex);
                             if (peer.checkIfNeighborBitfieldExists(connectedPeerID)) {
@@ -170,7 +164,7 @@ public class MessageManager implements Runnable{
                                 //however, if filePresent = false, that peer does not have to send a bitfield message
                                 //so a peer may not exist in the neighborBitfield map
                                 peer.addNeighborBitfield(connectedPeerID);
-                            }
+                            }*/
                             break;
                         case 5:
                             //bitfield
@@ -185,11 +179,11 @@ public class MessageManager implements Runnable{
                             break;
                         default:
                             //handshake
-                            String possibleHandshakeHeader = inputMsg.toString();
-                            String handShakeBeginning = possibleHandshakeHeader.substring(0, 18);
-                            connectedPeerID = Integer.parseInt(possibleHandshakeHeader.substring(28));
-                            if (handShakeBeginning == "P2PFILESHARINGPROJ") {
-                                System.out.println("Handshake is good for peer#" + peer.getPeerID() + " with peer#" + connectedPeerID + "!");
+                            byte[] possibleHandshakeHeader = Arrays.copyOfRange(inputMsg, 0, 18);
+                            connectedPeerID = ByteBuffer.wrap(Arrays.copyOfRange(inputMsg, 28,32)).getInt();
+                            String handshakerHeaderString = new String(possibleHandshakeHeader, StandardCharsets.UTF_8);
+                            if (Objects.equals(handshakerHeaderString, "P2PFILESHARINGPROJ")) {
+                                System.out.println("Handshake is good for Peer #" + peer.getPeerID() + " with Peer #" + connectedPeerID + "!");
                                 //send bitfield msg
                                 if (peer.getFilePresent()) {
                                     sendMessage(createMessage(5));
