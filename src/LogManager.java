@@ -117,6 +117,22 @@ public class LogManager {
                 clientLog += Integer.toString(hostID);
                 clientLog += ".";
                 break;
+            case "receiveNotInterested":
+                clientLog += timeStamp;
+                clientLog += ": Peer ";
+                clientLog += Integer.toString(clientID);
+                clientLog += " received the 'not interested' message from ";
+                clientLog += Integer.toString(hostID);
+                clientLog += ".";
+                break;
+            case "receiveBitfield":
+                clientLog += timeStamp;
+                clientLog += ": Peer ";
+                clientLog += Integer.toString(clientID);
+                clientLog += " received the 'bitfield' message from ";
+                clientLog += Integer.toString(hostID);
+                clientLog += ".";
+                break;
             case "downloadingPiece":
                 clientLog += timeStamp;
                 clientLog += ": Peer ";
