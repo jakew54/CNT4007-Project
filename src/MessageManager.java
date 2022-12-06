@@ -41,28 +41,39 @@ public class MessageManager implements Runnable{
         return;
     }
 
-    private byte[] handShake() {
+    private byte[] handShake() throws IOException {
         System.out.println("Entered handShake()");
+        ByteArrayOutputStream outByte = new ByteArrayOutputStream();
+        System.out.println("handshake1");
+        outByte.write("P2PFILESHARINGPROJ".getBytes(StandardCharsets.UTF_8));
+        System.out.println("handshake2");
+        byte[] handShakeZeroBits = new byte[10];
+        System.out.println("handshake3");
+        outByte.write(handShakeZeroBits);
+        System.out.println("handshake4");
+        outByte.write(ByteBuffer.allocate(4).putInt(peer.getPeerID()).array());
+        System.out.println("handshake5");
+        return outByte.toByteArray();
         //handshake message
-        byte[] handShakeMsg = new byte[32];
-        System.out.println("create 32 bytes");
-        String handShakeString = new String("P2PFILESHARINGPROJ");
-        byte[] handShake1 = handShakeString.getBytes();
-        System.out.println("sets up handShake1");
-        byte[] handShake2 = new byte[10];
-        byte[] handShake3 = ByteBuffer.allocate(4).putInt(peer.getPeerID()).array();
-        System.out.println("done with creating handShake 2 and 3");
-        for (int i = 0; i < 32; i++) {
-            System.out.println("Enters for loop");
-            if (i < 18) {
-                handShakeMsg[i] = handShake1[i];
-            } else if (i < 28) {
-                handShakeMsg[i] = handShake2[i - 18];
-            } else {
-                handShakeMsg[i] = handShake3[i - 28];
-            }
-        }
-        return handShakeMsg;
+//        byte[] handShakeMsg = new byte[32];
+//        System.out.println("create 32 bytes");
+//        String handShakeString = new String("P2PFILESHARINGPROJ");
+//        byte[] handShake1 = handShakeString.getBytes();
+//        System.out.println("sets up handShake1");
+//        byte[] handShake2 = new byte[10];
+//        byte[] handShake3 = ByteBuffer.allocate(4).putInt(peer.getPeerID()).array();
+//        System.out.println("done with creating handShake 2 and 3");
+//        for (int i = 0; i < 32; i++) {
+//            System.out.println("Enters for loop");
+//            if (i < 18) {
+//                handShakeMsg[i] = handShake1[i];
+//            } else if (i < 28) {
+//                handShakeMsg[i] = handShake2[i - 18];
+//            } else {
+//                handShakeMsg[i] = handShake3[i - 28];
+//            }
+//        }
+//        return handShakeMsg;
     }
 
     private byte[] createMessage(int messageType) {
