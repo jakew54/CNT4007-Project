@@ -37,7 +37,6 @@ public class peerProcess {
             if (p.getKey() < peerID) {
                 Client client = new Client(peers.get(peerID), p.getValue());
                 client.connectPeer();
-                System.out.println("Peer #" + p.getKey() + " connected to Peer #" + peerID + " successfully!");
                 //log
                 logger.createLog(peerID, p.getKey(), "tcpConnectionMade", 0);
             }
