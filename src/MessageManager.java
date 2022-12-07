@@ -325,6 +325,7 @@ public class MessageManager implements Runnable{
                                     sendMessage(createMessage(5, -1));
                                 }
                             }
+                            peer.addNeighborToDownloadedPieceFromNeighborMap(connectedPeerID);
                             break;
                     }
                 } catch (IOException ioE) {
