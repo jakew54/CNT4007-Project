@@ -156,18 +156,8 @@ public class MessageManager implements Runnable{
                 break;
             case 6:
                 //request
-                Vector<Integer> allInterestingPieces = peer.getNeighborBitfieldForAllInterestingPieces(connectedPeerID);
-                //send request message for piece peer both does not have and has not yet requested
-                for (int i = 0; i < allInterestingPieces.size(); i++) {
-                    if (peer.getRequestedPiecesFromNeighbors().containsValue(allInterestingPieces.get(i))) {
-                        allInterestingPieces.remove(allInterestingPieces.get(i));
-                    }
-                }
 
-                Random random = new Random();
-                int temp = 0;
-                temp = allInterestingPieces.get(random.nextInt(allInterestingPieces.size()));
-                peer.setRequestedPiecesFromNeighbors(connectedPeerID, temp);
+                peer.setRequestedPiecesFromNeighbors(connectedPeerID, payload);
 
                 outByte = new ByteArrayOutputStream();
                 messageLength = new byte[4];
@@ -176,7 +166,7 @@ public class MessageManager implements Runnable{
                 messageTypeArr = new byte[1];
                 messageTypeArr[0] = (byte) messageType;
 
-                messagePayload = ByteBuffer.allocate(4).putInt(temp).array();
+                messagePayload = ByteBuffer.allocate(4).putInt(payload).array();
 
                 try {
                     outByte.write(messageLength);
@@ -230,6 +220,7 @@ public class MessageManager implements Runnable{
                 System.out.println("Enters doAllHaveFile while loop");
                 try {
                     byte[] inputMsg = (byte[]) in.readObject();
+                    Vector<Integer> allInterestingPieces;
                     currMsgType = inputMsg[4];
                     System.out.println("currMsgType: " + currMsgType);
                     switch (currMsgType) {
@@ -242,8 +233,19 @@ public class MessageManager implements Runnable{
                             break;
                         case 1:
                             //unchoke
+                            allInterestingPieces = peer.getNeighborBitfieldForAllInterestingPieces(connectedPeerID);
                             logManager.createLog(peer.getPeerID(), connectedPeerID, "unchoking", 1);
-                            sendMessage(createMessage(6, -1));
+                            for (int i = 0; i < allInterestingPieces.size(); i++) {
+                                if (peer.getRequestedPiecesFromNeighbors().containsValue(allInterestingPieces.get(i))) {
+                                    allInterestingPieces.remove(allInterestingPieces.get(i));
+                                }
+                            }
+                            if (!allInterestingPieces.isEmpty()) {
+                                Random random = new Random();
+                                int temp = 0;
+                                temp = allInterestingPieces.get(random.nextInt(allInterestingPieces.size()));
+                                sendMessage(createMessage(6, temp));
+                            }
                             break;
                         case 2:
                             //interested
@@ -313,6 +315,19 @@ public class MessageManager implements Runnable{
                                 //sending have to everyone because peer got a new piece
                                 peer.getMsgManagerList().get(i).sendMessage(peer.getMsgManagerList().get(i).createMessage(4, pieceIndexReceived));
 
+                            }
+                            allInterestingPieces = peer.getNeighborBitfieldForAllInterestingPieces(connectedPeerID);
+                            //send request message for piece peer both does not have and has not yet requested
+                            for (int i = 0; i < allInterestingPieces.size(); i++) {
+                                if (peer.getRequestedPiecesFromNeighbors().containsValue(allInterestingPieces.get(i))) {
+                                    allInterestingPieces.remove(allInterestingPieces.get(i));
+                                }
+                            }
+                            if (!allInterestingPieces.isEmpty()) {
+                                Random random = new Random();
+                                int temp = 0;
+                                temp = allInterestingPieces.get(random.nextInt(allInterestingPieces.size()));
+                                sendMessage(createMessage(6, temp));
                             }
                             //TODO not done
                             break;
