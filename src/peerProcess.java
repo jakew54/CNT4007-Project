@@ -31,7 +31,14 @@ public class peerProcess {
                 byte[] fileBytes = Files.readAllBytes(Paths.get(filePath));
                 byte[] tempPieces = new byte[commonInfo.getPieceSize()];
                 for (int j = 0; j < commonInfo.getNumOfPieces(); j++) {
-                    System.arraycopy(fileBytes, j*commonInfo.getPieceSize(), tempPieces, 0, tempPieces.length);
+                    if (tempPieces.length <= (fileBytes.length - (j*commonInfo.getPieceSize()))) {
+                        System.arraycopy(fileBytes, j * commonInfo.getPieceSize(), tempPieces, 0, tempPieces.length);
+                    } else { //edge case where length is longer than what is left in the file, AKA when we will have extra bytes on file
+                        //preventing IndexOutOfBoundsException at edge case
+                        for (int k = 0; k < (fileBytes.length - (j*commonInfo.getPieceSize())); k++) {
+                            tempPieces[0] = fileBytes[(j*commonInfo.getPieceSize()) + k];
+                        }
+                    }
                     tempPeer.updateFileData(j, tempPieces);
                 }
                 //System.out.println(Arrays.toString(fileBytes));
@@ -61,10 +68,9 @@ public class peerProcess {
         System.out.println("Peer #" + peerID + " host duties fulfilled!");
 
         //TODO thread sitch
-        //all on thread
-        //calculatePreferredNeighbors()
-        //LogManager logging = new LogManager(peer);
-        //logging.createLog(peer.getPeerID(), connectedPeerID, "changePrefNeighbors", 1); //connectedPeerID is set in MsgManager
-
+        Thread threadPrefNeighbor = new PreferredNeighborsCalculator(peers.get(peerID));
+        threadPrefNeighbor.start();
+        Thread threadOptimisticUnchoke = new OptimisticUnchokingCalculator(peers.get(peerID));
+        threadOptimisticUnchoke.start();
     }
 }
