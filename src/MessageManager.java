@@ -13,6 +13,8 @@ public class MessageManager implements Runnable{
     private ObjectOutputStream out;
     private int connectedPeerID;
     private LogManager logManager;
+    private byte[] bitMasks1;
+    private byte[] bitMasks2;
 
     public MessageManager(Peer peer, ObjectOutputStream out, ObjectInputStream in) throws IOException {
         this.peer = peer;
@@ -109,6 +111,24 @@ public class MessageManager implements Runnable{
                 break;
             case 4:
                 //have
+                outByte = new ByteArrayOutputStream();
+                messageLength = new byte[4];
+                messageLength =  ByteBuffer.allocate(4).putInt(1 + 4).array();
+
+                messageTypeArr = new byte[1];
+                messageTypeArr[0] = (byte) messageType;
+
+                messagePayload = ByteBuffer.allocate(4).putInt(payload).array();
+
+                try {
+                    outByte.write(messageLength);
+                    outByte.write(messageTypeArr);
+                    outByte.write(messagePayload);
+                    outByte.close();
+                    return outByte.toByteArray();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
                 break;
             case 5:
                 //bitfield
@@ -168,10 +188,11 @@ public class MessageManager implements Runnable{
                 //piece
                 outByte = new ByteArrayOutputStream();
                 messageLength = new byte[4];
-                messageLength =  ByteBuffer.allocate(4).putInt(1 + 4).array();
+                messageLength =  ByteBuffer.allocate(4).putInt(1 + 4 + peer.getFileDataAtIndex(payload).length).array();
 
                 messageTypeArr = new byte[1];
                 messageTypeArr[0] = (byte) messageType;
+
 
                 messagePayload = ByteBuffer.allocate(4).putInt(payload).array();
 
@@ -179,6 +200,7 @@ public class MessageManager implements Runnable{
                     outByte.write(messageLength);
                     outByte.write(messageTypeArr);
                     outByte.write(messagePayload);
+                    outByte.write(peer.getFileDataAtIndex(payload));
                     outByte.close();
                     return outByte.toByteArray();
                 } catch (IOException e) {
@@ -276,7 +298,13 @@ public class MessageManager implements Runnable{
                         case 7:
                             //piece
                             //receive piece, send new request
+                            int pieceMsgLength = ByteBuffer.wrap(Arrays.copyOfRange(inputMsg, 0, 4)).getInt();
+                            int pieceIndexReceived = ByteBuffer.wrap(Arrays.copyOfRange(inputMsg, 5, 9)).getInt();
+                            byte[] byteReceived = Arrays.copyOfRange(inputMsg, 9,pieceMsgLength);
+                            peer.updateFileData(pieceIndexReceived, byteReceived);
+                            peer.updateBitField(pieceIndexReceived);
                             peer.addDownloadedPieceToDownloadedFromNeighborMap(connectedPeerID);
+                            //TODO not done
                             break;
                         default:
                             //handshake

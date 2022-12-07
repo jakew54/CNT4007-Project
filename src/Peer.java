@@ -13,7 +13,7 @@ public class Peer {
     private int peerPortNum;
     private boolean filePresent;
     private byte[] bitField;
-    private byte[] fileData; //first index is byte in bitfield, second index is bit within that byte
+    private byte[][] fileData;
     private int numPreferredNeighbors;
     private int unchokingInterval;
     private int optimisticUnchokingInterval;
@@ -92,6 +92,16 @@ public class Peer {
 
     public byte[] getBitField() {
         return bitField;
+    }
+
+    public void updateBitField(int pieceIndex) {
+        int pieceIndex1 = pieceIndex / 8;
+        int pieceIndex2 = pieceIndex % 8;
+        bitField[pieceIndex1] = (byte) (bitField[pieceIndex1] | (1 << pieceIndex2));
+        for (Map.Entry<Integer, MessageManager> p : msgManagerList.entrySet()) {
+            p.getValue().sendMessage(p.getValue().createMessage(4,pieceIndex));
+        }
+        return;
     }
 
     public void addInterestedNeighbor(int interestedPeerID) {
@@ -394,7 +404,15 @@ public class Peer {
         return msgManagerList;
     }
 
-    public void setFileData(byte[] fileData, int size) {
-        this.fileData = Arrays.copyOf(fileData, size);
+    public void createFileData(int numPiece) {
+        fileData = new byte[numPiece][];
+    }
+
+    public void updateFileData(int pieceIndex, byte[] piece) {
+        fileData[pieceIndex] = Arrays.copyOf(piece, piece.length);
+    }
+
+    public byte[] getFileDataAtIndex(int pieceIndex) {
+        return this.fileData[pieceIndex];
     }
 }

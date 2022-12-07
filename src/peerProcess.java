@@ -23,12 +23,17 @@ public class peerProcess {
             tempPeer.setFileName(commonInfo.getFilename());
             tempPeer.setFileSize(commonInfo.getFileSize());
             tempPeer.setPieceSize(commonInfo.getPieceSize());
+            tempPeer.createFileData(commonInfo.getNumOfPieces());
             //System.out.println("File Present: "+ tempPeer.getFilePresent());
             if (tempPeer.getFilePresent()) {
                 //System.out.println("Enter file present IF");
                 String filePath = "peer_" + tempPeer.getPeerID() + "/" + commonInfo.getFilename();
                 byte[] fileBytes = Files.readAllBytes(Paths.get(filePath));
-                tempPeer.setFileData(fileBytes, commonInfo.getBitFieldSize());
+                byte[] tempPieces = new byte[commonInfo.getPieceSize()];
+                for (int j = 0; j < commonInfo.getNumOfPieces(); j++) {
+                    System.arraycopy(fileBytes, j*commonInfo.getPieceSize(), tempPieces, 0, tempPieces.length);
+                    tempPeer.updateFileData(j, tempPieces);
+                }
                 //System.out.println(Arrays.toString(fileBytes));
             }
 
