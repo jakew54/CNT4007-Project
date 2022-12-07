@@ -23,29 +23,65 @@ public class MessageManager implements Runnable{
         this.logManager = new LogManager(peer);
     }
 
+    public BitSet bytesToBitSet(byte[] byteArr) {
+        BitSet bitSet = new BitSet();
+        for (int i = 0; i < byteArr.length * 8; i++) {
+            if ((byteArr[byteArr.length - i / 8 - 1] & (1 << (i % 8))) > 0) {
+                bitSet.set(i);
+            }
+        }
+        return bitSet;
+    }
+
     public int getConnectedPeerID(){
         return this.connectedPeerID;
     }
+
+    public boolean allPeersDoNotHaveFile2() {
+        if (peer.getNeighborBitFields2().isEmpty()) {
+            return true;
+        }
+        if (!peer.checkIfBitField2IsFull(peer.getBitField2())) {
+            return true;
+        }
+        for (int i = 0; i < peer.getNeighborBitFields2().size(); i++) {
+            if (!peer.checkIfBitField2IsFull(peer.getNeighborBitFields2().get(i))) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public boolean allPeersDoNotHaveFile() {
 
         if (peer.getNeighborBitfields().isEmpty()){
             return true;
         }
 
-        if (peer.getFilePresent()) {
-            for (Map.Entry<Integer, byte[]> p : peer.getNeighborBitfields().entrySet()) {
-                for (int i = 0; i < p.getValue().length; i++) {
-                    for (int j = 0; j < 8; j++) {
-                        if ((p.getValue()[i] >> j & 1) == 0) {
-                            return true;
-                        }
-                    }
-                }
-            }
-        }
-        else{
+        if (!peer.checkIfBitFieldIsFull(peer.getBitField())) {
             return true;
         }
+
+        for (int i = 0; i < peer.getNeighborBitfields().size(); i++) {
+            if (!peer.checkIfBitFieldIsFull(peer.getNeighborBitfields().get(i))) {
+                return true;
+            }
+        }
+
+//        if (peer.getFilePresent()) {
+//            for (Map.Entry<Integer, byte[]> p : peer.getNeighborBitfields().entrySet()) {
+//                for (int i = 0; i < p.getValue().length; i++) {
+//                    for (int j = 0; j < 8; j++) {
+//                        if ((p.getValue()[i] >> j & 1) == 0) {
+//                            return true;
+//                        }
+//                    }
+//                }
+//            }
+//        }
+//        else{
+//            return true;
+//        }
         return false;
     }
 
@@ -137,12 +173,14 @@ public class MessageManager implements Runnable{
                 //bitfield
                 outByte = new ByteArrayOutputStream();
                 messageLength = new byte[4];
-                messageLength =  ByteBuffer.allocate(4).putInt(1 + peer.getBitField().length).array();
+                //messageLength =  ByteBuffer.allocate(4).putInt(1 + peer.getBitField().length).array();
+                messageLength =  ByteBuffer.allocate(4).putInt(1 + peer.getBitField2().toByteArray().length).array();
 
                 messageTypeArr = new byte[1];
                 messageTypeArr[0] = (byte) messageType;
 
-                messagePayload = peer.getBitField();
+                //messagePayload = peer.getBitField();
+                messagePayload = peer.getBitField2().toByteArray();
 
                 try {
                     outByte.write(messageLength);
@@ -219,6 +257,10 @@ public class MessageManager implements Runnable{
             while (allPeersDoNotHaveFile()) {
                 System.out.println("Enters doAllHaveFile while loop");
                 try {
+                    if (peer.checkIfBitField2IsFull(peer.getBitField2())) {
+                        peer.setFilePresent(true);
+                        peer.writeDataToFile();
+                    }
                     byte[] inputMsg = (byte[]) in.readObject();
                     Vector<Integer> allInterestingPieces;
                     currMsgType = inputMsg[4];
@@ -233,7 +275,7 @@ public class MessageManager implements Runnable{
                             break;
                         case 1:
                             //unchoke
-                            allInterestingPieces = peer.getNeighborBitfieldForAllInterestingPieces(connectedPeerID);
+                            allInterestingPieces = peer.getNeighborBitField2ForAllInterestingPieces(connectedPeerID);
                             logManager.createLog(peer.getPeerID(), connectedPeerID, "unchoking", 1);
                             for (int i = 0; i < allInterestingPieces.size(); i++) {
                                 if (peer.getRequestedPiecesFromNeighbors().containsValue(allInterestingPieces.get(i))) {
@@ -262,17 +304,18 @@ public class MessageManager implements Runnable{
                             int haveMsgSize = ByteBuffer.wrap(Arrays.copyOfRange(inputMsg, 0, 4)).getInt();
                             int haveIndex = ByteBuffer.wrap(Arrays.copyOfRange(inputMsg, 5, inputMsg.length)).getInt();
                             logManager.createLog(peer.getPeerID(), connectedPeerID, "receiveHave", haveIndex);
-                            if (peer.checkIfNeighborBitfieldExists(connectedPeerID)) {
-                                peer.updateNeighborBitfield(connectedPeerID, haveIndex);
+                            if (peer.checkIfNeighborBitField2Exists(connectedPeerID)) {
+                                peer.updateNeighborBitfields2(connectedPeerID, haveIndex);
                             } else {
                                 //bitfield message is sent directly after handshake message
                                 //however, if filePresent = false, that peer does not have to send a bitfield message
                                 //so a peer may not exist in the neighborBitfield map
-                                peer.addNeighborBitfield(connectedPeerID);
-                                peer.updateNeighborBitfield(connectedPeerID, haveIndex);
+                                peer.setNeighborBitFields2(connectedPeerID);
+                                peer.updateNeighborBitfields2(connectedPeerID, haveIndex);
                             }
                             //check if you want it
-                            if (peer.checkIfPeerHasPieceAtIndex(haveIndex)) {
+                            //if (peer.checkIfPeerHasPieceAtIndex(haveIndex)) {
+                            if (peer.checkIfPeerHasPieceAtIndex2(haveIndex)) {
                                 //not interested - already has piece
                                 sendMessage(createMessage(3, -1));
                             } else {
@@ -286,8 +329,9 @@ public class MessageManager implements Runnable{
                             int bitFieldMsgSize = ByteBuffer.wrap(Arrays.copyOfRange(inputMsg, 0, 4)).getInt();
                             byte[] neighborBitFieldGiven = new byte[bitFieldMsgSize - 1];
                             ByteBuffer.wrap(Arrays.copyOfRange(inputMsg, 5, inputMsg.length)).get(neighborBitFieldGiven, 0, neighborBitFieldGiven.length);
-                            peer.setNeighborBitfields(connectedPeerID, neighborBitFieldGiven);
-                            if (peer.checkNeighborBitfieldForInterestingPieces(connectedPeerID)) {
+                            BitSet bitSet = bytesToBitSet(neighborBitFieldGiven);
+                            peer.addNeighborBitField2(connectedPeerID, bitSet);
+                            if (peer.checkNeighborBitfieldForInterestingPieces2(connectedPeerID)) {
                                 //contains at least 1 interesting piece
                                 sendMessage(createMessage(2, -1));
                             } else {
@@ -299,6 +343,7 @@ public class MessageManager implements Runnable{
                             //request
                             //receive req, send piece
                             int requestedPieceIndex = ByteBuffer.wrap(Arrays.copyOfRange(inputMsg, 5, 9)).getInt();
+                            //TODO
                             sendMessage(createMessage(7, requestedPieceIndex));
                             logManager.createLog(peer.getPeerID(), connectedPeerID, "receiveRequest", requestedPieceIndex);
                             break;
@@ -309,7 +354,7 @@ public class MessageManager implements Runnable{
                             int pieceIndexReceived = ByteBuffer.wrap(Arrays.copyOfRange(inputMsg, 5, 9)).getInt();
                             byte[] byteReceived = Arrays.copyOfRange(inputMsg, 9,pieceMsgLength);
                             peer.updateFileData(pieceIndexReceived, byteReceived);
-                            peer.updateBitField(pieceIndexReceived);
+                            peer.updateBitField2(pieceIndexReceived);
                             peer.removeRequestedPiecesFromNeighbors(pieceIndexReceived);
                             peer.addDownloadedPieceToDownloadedFromNeighborMap(connectedPeerID);
                             for (int i = 0; i < peer.getMsgManagerList().size(); i++) {
@@ -317,7 +362,7 @@ public class MessageManager implements Runnable{
                                 peer.getMsgManagerList().get(i).sendMessage(peer.getMsgManagerList().get(i).createMessage(4, pieceIndexReceived));
 
                             }
-                            allInterestingPieces = peer.getNeighborBitfieldForAllInterestingPieces(connectedPeerID);
+                            allInterestingPieces = peer.getNeighborBitField2ForAllInterestingPieces(connectedPeerID);
                             //send request message for piece peer both does not have and has not yet requested
                             for (int i = 0; i < allInterestingPieces.size(); i++) {
                                 if (peer.getRequestedPiecesFromNeighbors().containsValue(allInterestingPieces.get(i))) {
@@ -345,6 +390,7 @@ public class MessageManager implements Runnable{
                                     sendMessage(createMessage(5, -1));
                                 }
                             }
+                            peer.setNeighborBitFields2(connectedPeerID);
                             peer.addNeighborToDownloadedPieceFromNeighborMap(connectedPeerID);
                             peer.updateChokedNeighbors(connectedPeerID);
                             break;
@@ -353,10 +399,6 @@ public class MessageManager implements Runnable{
                     System.err.println("IOexception oh no");
                 } catch (ClassNotFoundException cnfE) {
                     System.err.println("ClassNotFoundException darnit");
-                }
-                if (peer.checkIfBitFieldIsFull()) {
-                    peer.setFilePresent(true);
-                    peer.writeDataToFile();
                 }
             }
             System.out.println("End of while loop");

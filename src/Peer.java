@@ -3,6 +3,7 @@ import java.io.*;
 import java.nio.*;
 import java.nio.channels.*;
 import java.util.*;
+import java.io.File;
 
 import static java.lang.Math.random;
 
@@ -13,7 +14,9 @@ public class Peer {
     private int peerPortNum;
     private boolean filePresent;
     private byte[] bitField;
-    private byte[][] fileData;
+    private BitSet bitField2;
+    private HashMap<Integer, BitSet> neighborBitFields2 = new HashMap<>();
+    private Vector<byte[]> fileData = new Vector<>();
     private int numPreferredNeighbors;
     private int unchokingInterval;
     private int optimisticUnchokingInterval;
@@ -44,6 +47,46 @@ public class Peer {
         this.peerPortNum = peerPortNum;
         this.filePresent = filePresent;
         this.optimisticUnchokedNeighborID = 0;
+    }
+
+    public void setBitField2() {
+        if (filePresent) {
+            bitField2 = new BitSet(numOfPieces);
+            bitField2.set(0,numOfPieces,true);
+        } else {
+            bitField2 = new BitSet(numOfPieces);
+            bitField2.set(0,numOfPieces,false);
+        }
+    }
+
+    public BitSet getBitField2() {
+        return bitField2;
+    }
+
+    public void updateBitField2(int pieceIndex) {
+        //never have to set it to false
+        bitField2.set(pieceIndex, true);
+    }
+
+    public boolean checkIfBitField2IsFull(BitSet currentBitField) {
+        for (int i = 0; i < numOfPieces; i++) {
+            if (!currentBitField.get(i)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public HashMap<Integer, BitSet> getNeighborBitFields2() {
+        return neighborBitFields2;
+    }
+
+    public void setNeighborBitFields2(int neighborId) {
+        neighborBitFields2.put(neighborId, new BitSet(numOfPieces));
+    }
+
+    public void updateNeighborBitfields2(int neighborID, int pieceIndex) {
+        neighborBitFields2.get(neighborID).set(pieceIndex, true);
     }
 
     public void setRequestedPiecesFromNeighbors(int neighborID, int pieceIndex) {
@@ -84,7 +127,7 @@ public class Peer {
             }
             if ((size * 8) > numPieces) {
                 int extraBitsNum = (size * 8) - numPieces;
-                for (int i = 0; i < extraBitsNum; i++) {
+                for (int i = extraBitsNum; i < 8; i++) {
                     bitField[size-1] = (byte) (bitField[size-1] & ~(1 << i));
                 }
             }
@@ -106,14 +149,14 @@ public class Peer {
         return;
     }
 
-    public boolean checkIfBitFieldIsFull() {
+    public boolean checkIfBitFieldIsFull(byte[] currentBitfield) {
         int possibleExtraBitsHandler = 0;
-        for (int i = 0; i < bitField.length; i++) {
-            if (i == bitField.length - 1) {
-                possibleExtraBitsHandler = bitField.length - numOfPieces;
+        for (int i = 0; i < currentBitfield.length; i++) {
+            if (i == currentBitfield.length - 1) {
+                possibleExtraBitsHandler = (currentBitfield.length * 8) - numOfPieces;
             }
             for (int j = 0; j < 8 - possibleExtraBitsHandler; j++) {
-                if ((bitField[i] >> j & 1) == 0) {
+                if ((currentBitfield[i] >> j & 1) == 0) {
                     return false;
                 }
             }
@@ -259,6 +302,10 @@ public class Peer {
         neighborBitfields.put(neighborID, bitFieldTemp);
     }
 
+    public void addNeighborBitField2(int neighborID, BitSet bitSet) {
+        neighborBitFields2.put(neighborID, bitSet);
+    }
+
     public void setNeighborBitfields(int neighborID, byte[] givenBitfield) {
         neighborBitfields.put(neighborID, givenBitfield);
     }
@@ -281,10 +328,22 @@ public class Peer {
         }
     }
 
+    public boolean checkIfNeighborBitField2Exists(int neighborID) {
+        if (neighborBitFields2.containsKey(neighborID)) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
     public boolean checkIfPeerHasPieceAtIndex(int pieceIndex) {
         int pieceIndex1 = pieceIndex / 8; //determines which byte in bitfield pieceIndex is in
         int pieceIndex2 = pieceIndex % 8; //determines which bit within that byte pieceIndex is
         return (bitField[pieceIndex1] >> pieceIndex2 & 1) == 1;
+    }
+
+    public boolean checkIfPeerHasPieceAtIndex2(int pieceIndex) {
+        return(bitField2.get(pieceIndex));
     }
 
     public boolean checkNeighborBitfieldForInterestingPieces(int neighborID) {
@@ -293,6 +352,15 @@ public class Peer {
                 if((bitField[i] >> j & 1) != ((neighborBitfields.get(neighborID))[i] >> j & 1)) {
                     return true;
                 }
+            }
+        }
+        return false;
+    }
+
+    public boolean checkNeighborBitfieldForInterestingPieces2(int neighborID) {
+        for (int i = 0; i < numOfPieces; i++) {
+            if (neighborBitFields2.get(neighborID).get(i) == true && bitField2.get(i) == false) {
+                return true;
             }
         }
         return false;
@@ -308,6 +376,20 @@ public class Peer {
             }
         }
         return temp;
+    }
+
+    public Vector<Integer> getNeighborBitField2ForAllInterestingPieces(int neighborID) {
+        Vector<Integer> temp = new Vector<>();
+        for (int i = 0; i < numOfPieces; i++) {
+            if (bitField2.get(i) == false && neighborBitFields2.get(neighborID).get(i) == true) {
+                temp.add(i);
+            }
+        }
+        return temp;
+    }
+
+    public int getNumOfPieces() {
+        return numOfPieces;
     }
 
     public int getPeerID() {
@@ -460,15 +542,18 @@ public class Peer {
     }
 
     public void createFileData(int numPiece) {
-        fileData = new byte[numPiece][];
+        fileData.setSize(numOfPieces);
+        for (int i = 0; i < numOfPieces; i++) {
+            fileData.set(i, new byte[pieceSize]);
+        }
     }
 
     public void updateFileData(int pieceIndex, byte[] piece) {
-        fileData[pieceIndex] = Arrays.copyOf(piece, piece.length);
+        fileData.set(pieceIndex, piece);
     }
 
     public byte[] getFileDataAtIndex(int pieceIndex) {
-        return this.fileData[pieceIndex];
+        return fileData.get(pieceIndex);
     }
 
     public void updateChokedNeighbors(int neighborID){
@@ -477,10 +562,13 @@ public class Peer {
 
     public void writeDataToFile() throws IOException {
         String destinationFileName = "/peer_" + peerID + "/tree.jpg";
-        FileOutputStream fos = new FileOutputStream(destinationFileName);
-        for (int i = 0; i < fileData.length; i++) {
-            fos.write(fileData[i]);
+        File file = new File(destinationFileName);
+        file.createNewFile();
+        FileOutputStream fos = new FileOutputStream(file);
+        for (int i = 0; i < fileData.size(); i++) {
+            fos.write(fileData.get(i));
         }
+        fos.close();
     }
 
     public void setNumofPieces(int num) {
