@@ -98,9 +98,6 @@ public class Peer {
         int pieceIndex1 = pieceIndex / 8;
         int pieceIndex2 = pieceIndex % 8;
         bitField[pieceIndex1] = (byte) (bitField[pieceIndex1] | (1 << pieceIndex2));
-        for (Map.Entry<Integer, MessageManager> p : msgManagerList.entrySet()) {
-            p.getValue().sendMessage(p.getValue().createMessage(4,pieceIndex));
-        }
         return;
     }
 
@@ -117,6 +114,14 @@ public class Peer {
     }
 
     public void calculatePreferredNeighbors() {
+        //TODO Suppose that peer C is randomly chosen as the optimistically unchoked neighbor of peer
+        //A. Because peer A is sending data to peer C, peer A may become one of peer C’s
+        //preferred neighbors, in which case peer C would start to send data to peer A. If the rate
+        //at which peer C sends data to peer A is high enough, peer C could then, in turn, become
+        //one of peer A’s preferred neighbors. Note that in this case, peer C may be a preferred
+        //neighbor and optimistically unchoked neighbor at the same time. This kind of situation is
+        //allowed. In the next optimistic unchoking interval, another peer will be selected as an
+        //optimistically unchoked neighbor.
         preferredNeighbors.clear();
         if (!filePresent) {
             HashMap<Integer, Float> neighborDownloadTimes = new HashMap<>();

@@ -164,6 +164,7 @@ public class MessageManager implements Runnable{
                 Random random = new Random();
                 int temp = 0;
                 temp = allInterestingPieces.get(random.nextInt(allInterestingPieces.size()));
+                peer.setRequestedPiecesFromNeighbors(connectedPeerID, temp);
 
                 outByte = new ByteArrayOutputStream();
                 messageLength = new byte[4];
@@ -303,7 +304,12 @@ public class MessageManager implements Runnable{
                             byte[] byteReceived = Arrays.copyOfRange(inputMsg, 9,pieceMsgLength);
                             peer.updateFileData(pieceIndexReceived, byteReceived);
                             peer.updateBitField(pieceIndexReceived);
+                            peer.removeRequestedPiecesFromNeighbors(pieceIndexReceived);
                             peer.addDownloadedPieceToDownloadedFromNeighborMap(connectedPeerID);
+                            for (Map.Entry<Integer, MessageManager> p : peer.getMsgManagerList().entrySet()) {
+                                //sending have to everyone because peer got a new piece
+                                p.getValue().sendMessage(p.getValue().createMessage(4,pieceIndexReceived));
+                            }
                             //TODO not done
                             break;
                         default:
