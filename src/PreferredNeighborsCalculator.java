@@ -46,6 +46,7 @@ public class PreferredNeighborsCalculator extends Thread{
             }
             peer.calculatePreferredNeighbors();
             logManager.createLog(peer.getPeerID(), 0, "changePrefNeighbors", -1);
+            isFirstRun = false;
         }
     }
 }

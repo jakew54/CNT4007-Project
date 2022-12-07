@@ -122,91 +122,97 @@ public class Peer {
         //neighbor and optimistically unchoked neighbor at the same time. This kind of situation is
         //allowed. In the next optimistic unchoking interval, another peer will be selected as an
         //optimistically unchoked neighbor.
-        preferredNeighbors.clear();
-        if (!filePresent) {
-            HashMap<Integer, Float> neighborDownloadTimes = new HashMap<>();
-
-            for (Map.Entry<Integer, Integer> p : numPiecesDownloadedFromNeighbor.entrySet()) {
-                neighborDownloadTimes.put(p.getKey(), ((float) p.getValue()) / ((float) unchokingInterval));
+        if (!interestedNeighbors.isEmpty()) {
+            if (!(preferredNeighbors.isEmpty())) {
+                preferredNeighbors.clear();
             }
+            if (!filePresent) {
+                HashMap<Integer, Float> neighborDownloadTimes = new HashMap<>();
 
-            float max;
-            Vector<Integer> currMaxIDs = new Vector<>();
-            for (int i = 0; i < numPreferredNeighbors; i++) {
-                max = -1;
-                for (Map.Entry<Integer, Float> entry : neighborDownloadTimes.entrySet()) {
-                    if (entry.getValue() > max) {
-                        currMaxIDs.clear();
-                        max = entry.getValue();
-                        currMaxIDs.add(entry.getKey());
-                    } else if (entry.getValue().equals(max)) {
-                        currMaxIDs.add(entry.getKey());
+                for (Map.Entry<Integer, Integer> p : numPiecesDownloadedFromNeighbor.entrySet()) {
+                    neighborDownloadTimes.put(p.getKey(), ((float) p.getValue()) / ((float) unchokingInterval));
+                }
+
+                float max;
+                Vector<Integer> currMaxIDs = new Vector<>();
+                for (int i = 0; i < numPreferredNeighbors; i++) {
+                    max = -1;
+                    for (Map.Entry<Integer, Float> entry : neighborDownloadTimes.entrySet()) {
+                        if (entry.getValue() > max) {
+                            currMaxIDs.clear();
+                            max = entry.getValue();
+                            currMaxIDs.add(entry.getKey());
+                        } else if (entry.getValue().equals(max)) {
+                            currMaxIDs.add(entry.getKey());
+                        }
+                    }
+                    if (currMaxIDs.size() > 1) {
+                        Random random = new Random();
+                        int temp = random.nextInt(currMaxIDs.size());
+                        preferredNeighbors.add(currMaxIDs.get(temp));
+                        neighborDownloadTimes.remove(currMaxIDs.get(temp));
+                    } else {
+                        preferredNeighbors.add(currMaxIDs.get(0));
+                        neighborDownloadTimes.remove(currMaxIDs.get(0));
                     }
                 }
-                if (currMaxIDs.size() > 1) {
-                    Random random = new Random();
-                    int temp = random.nextInt(currMaxIDs.size());
-                    preferredNeighbors.add(currMaxIDs.get(temp));
-                    neighborDownloadTimes.remove(currMaxIDs.get(temp));
-                } else {
-                    preferredNeighbors.add(currMaxIDs.get(0));
-                    neighborDownloadTimes.remove(currMaxIDs.get(0));
-                }
-            }
-        } else { //file is present
-            //randomly choose from interested neighbors
-            Vector<Integer> intNeighborsTemp = new Vector<>(interestedNeighbors);
+            } else { //file is present
+                //randomly choose from interested neighbors
+                Vector<Integer> intNeighborsTemp = new Vector<>(interestedNeighbors);
 
-            for (int i = 0; i < numPreferredNeighbors; i++) {
-                Random random = new Random();
-                int temp = random.nextInt(intNeighborsTemp.size());
-                preferredNeighbors.add(temp);
-                intNeighborsTemp.remove(temp);
-            }
-        }
-        //TODO maybe don't log if list hasn't changed
-        for (int i = 0; i < connectedPeers.size(); i++) {
-            if (!(chokedNeighbors.contains(connectedPeers.get((i))))) {
-                if (!(preferredNeighbors.contains(connectedPeers.get(i))) && !(connectedPeers.get(i) == optimisticUnchokedNeighborID)) {
-                    msgManagerList.get(connectedPeers.get(i)).sendMessage(msgManagerList.get(connectedPeers.get(i)).createMessage(0, -1));
-                    chokedNeighbors.add(connectedPeers.get(i));
+                for (int i = 0; i < numPreferredNeighbors; i++) {
+                    Random random = new Random();
+                    int temp = random.nextInt(intNeighborsTemp.size());
+                    preferredNeighbors.add(temp);
+                    intNeighborsTemp.remove(temp);
                 }
             }
-        }
-        for (int i = 0; i < preferredNeighbors.size(); i++) {
-            if (chokedNeighbors.contains(preferredNeighbors.get(i))) {
-                msgManagerList.get(preferredNeighbors.get(i)).sendMessage(msgManagerList.get(preferredNeighbors.get(i)).createMessage(1, -1));
-                chokedNeighbors.remove(preferredNeighbors.get(i));
+            //TODO maybe don't log if list hasn't changed
+            for (int i = 0; i < connectedPeers.size(); i++) {
+                if (!(chokedNeighbors.contains(connectedPeers.get((i))))) {
+                    if (!(preferredNeighbors.contains(connectedPeers.get(i))) && !(connectedPeers.get(i) == optimisticUnchokedNeighborID)) {
+                        msgManagerList.get(connectedPeers.get(i)).sendMessage(msgManagerList.get(connectedPeers.get(i)).createMessage(0, -1));
+                        chokedNeighbors.add(connectedPeers.get(i));
+                    }
+                }
+            }
+            for (int i = 0; i < preferredNeighbors.size(); i++) {
+                if (chokedNeighbors.contains(preferredNeighbors.get(i))) {
+                    msgManagerList.get(preferredNeighbors.get(i)).sendMessage(msgManagerList.get(preferredNeighbors.get(i)).createMessage(1, -1));
+                    chokedNeighbors.remove(preferredNeighbors.get(i));
+                }
             }
         }
         return;
     }
 
     public void calculateOptimisticallyUnchokedNeighbor() {
-        Vector<Integer> tempChokedandInterested = new Vector<>();
-        for (int i = 0; i < Math.min(chokedNeighbors.size(), interestedNeighbors.size()); i++) {
-            if (chokedNeighbors.size() <= interestedNeighbors.size()) {
-                if (interestedNeighbors.contains(chokedNeighbors.get(i))) {
-                    tempChokedandInterested.add(chokedNeighbors.get(i));
-                }
-            } else {
-                if (chokedNeighbors.contains(interestedNeighbors.get(i))) {
-                    tempChokedandInterested.add(interestedNeighbors.get(i));
+        if (!interestedNeighbors.isEmpty()) {
+            Vector<Integer> tempChokedandInterested = new Vector<>();
+            for (int i = 0; i < Math.min(chokedNeighbors.size(), interestedNeighbors.size()); i++) {
+                if (chokedNeighbors.size() <= interestedNeighbors.size()) {
+                    if (interestedNeighbors.contains(chokedNeighbors.get(i))) {
+                        tempChokedandInterested.add(chokedNeighbors.get(i));
+                    }
+                } else {
+                    if (chokedNeighbors.contains(interestedNeighbors.get(i))) {
+                        tempChokedandInterested.add(interestedNeighbors.get(i));
+                    }
                 }
             }
+
+            Random random = new Random();
+            int temp = tempChokedandInterested.get(random.nextInt(tempChokedandInterested.size()));
+
+            if (optimisticUnchokedNeighborID > 0) {
+                msgManagerList.get(optimisticUnchokedNeighborID).sendMessage(msgManagerList.get(optimisticUnchokedNeighborID).createMessage(0, -1));
+                chokedNeighbors.add(optimisticUnchokedNeighborID);
+            }
+
+            optimisticUnchokedNeighborID = temp;
+            chokedNeighbors.remove(temp);
+            msgManagerList.get(optimisticUnchokedNeighborID).sendMessage(msgManagerList.get(optimisticUnchokedNeighborID).createMessage(1, -1));
         }
-
-        Random random = new Random();
-        int temp = tempChokedandInterested.get(random.nextInt(tempChokedandInterested.size()));
-
-        if (optimisticUnchokedNeighborID > 0) {
-            msgManagerList.get(optimisticUnchokedNeighborID).sendMessage(msgManagerList.get(optimisticUnchokedNeighborID).createMessage(0, -1));
-            chokedNeighbors.add(optimisticUnchokedNeighborID);
-        }
-
-        optimisticUnchokedNeighborID = temp;
-        chokedNeighbors.remove(temp);
-        msgManagerList.get(optimisticUnchokedNeighborID).sendMessage(msgManagerList.get(optimisticUnchokedNeighborID).createMessage(1, -1));
         return;
     }
 

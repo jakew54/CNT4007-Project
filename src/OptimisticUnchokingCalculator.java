@@ -46,6 +46,7 @@ public class OptimisticUnchokingCalculator extends Thread{
             }
             peer.calculateOptimisticallyUnchokedNeighbor();
             logManager.createLog(peer.getPeerID(), -1, "changeOptUnchokeNeighbor", -1);
+            isFirstRun = false;
         }
     }
 }
