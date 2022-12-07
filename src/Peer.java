@@ -24,7 +24,7 @@ public class Peer {
 
     private Vector<Integer> connectedPeers = new Vector<>();
     private Vector<Integer> interestedNeighbors = new Vector<>();
-    private Vector<Integer> preferredNeighbors;
+    private Vector<Integer> preferredNeighbors = new Vector<>();
     private Vector<Integer> chokedNeighbors;
     private HashMap<Integer, byte[]> neighborBitfields = new HashMap<>();
     private HashMap<Integer, Integer> numPiecesDownloadedFromNeighbor = new HashMap<>(); // <neighborID, numDownloaded>
