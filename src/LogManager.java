@@ -63,16 +63,20 @@ public class LogManager {
                 clientLog += timeStamp;
                 clientLog += ": Peer ";
                 clientLog += Integer.toString(clientID);
-                clientLog += " has the preferred neighbors ";
-                String tempNeighbors = "";
-                Vector<Integer> tempNeighborsVec = peer.getPreferredNeighbors();
-                for (int i = 0; i < tempNeighborsVec.size(); i++) {
-                    tempNeighbors += Integer.toString(tempNeighborsVec.get(i));
-                    if (i < tempNeighborsVec.size() - 1) {
-                        tempNeighbors += ",";
+                if (!peer.getPreferredNeighbors().isEmpty()) {
+                    clientLog += " has the preferred neighbors ";
+                    String tempNeighbors = "";
+                    Vector<Integer> tempNeighborsVec = peer.getPreferredNeighbors();
+                    for (int i = 0; i < tempNeighborsVec.size(); i++) {
+                        tempNeighbors += Integer.toString(tempNeighborsVec.get(i));
+                        if (i < tempNeighborsVec.size() - 1) {
+                            tempNeighbors += ",";
+                        }
                     }
+                    clientLog += tempNeighbors;
+                } else {
+                    clientLog += " has no preferred neighbors";
                 }
-                clientLog += tempNeighbors;
                 clientLog += ".";
                 break;
             case "changeOptUnchokeNeighbor":
