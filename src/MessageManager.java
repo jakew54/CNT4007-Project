@@ -5,9 +5,7 @@ import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 
 public class MessageManager implements Runnable{
     private Peer peer;
@@ -23,7 +21,7 @@ public class MessageManager implements Runnable{
         this.logManager = new LogManager(peer);
     }
 
-    private boolean doAllHaveFile() {
+    public boolean doAllHaveFile() {
         for (Map.Entry<Integer, byte[]> p : peer.getNeighborBitfields().entrySet()) {
             for (int i = 0; i < p.getValue().length; i++) {
                 for (int j = 0; j < 8; j++) {
@@ -36,7 +34,7 @@ public class MessageManager implements Runnable{
         return true;
     }
 
-    private void sendMessage(byte[] message) {
+    public void sendMessage(byte[] message) {
         try {
             out.writeObject(message);
             out.flush();
@@ -46,7 +44,7 @@ public class MessageManager implements Runnable{
         return;
     }
 
-    private byte[] handShake() {
+    public byte[] handShake() {
         System.out.println("Enters handShake()");
         //handshake message
         byte[] handShakeMsg = new byte[32];
@@ -66,7 +64,7 @@ public class MessageManager implements Runnable{
         return handShakeMsg;
     }
 
-    private byte[] createMessage(int messageType) {
+    public byte[] createMessage(int messageType, int payload) {
         byte[] msg = new byte[0];
         byte[] messageLength, messageTypeArr, messagePayload;
         ByteArrayOutputStream outByte;
@@ -121,11 +119,57 @@ public class MessageManager implements Runnable{
                 break;
             case 6:
                 //request
+                Vector<Integer> allInterestingPieces = peer.getNeighborBitfieldForAllInterestingPieces(connectedPeerID);
+                //send request message for piece peer both does not have and has not yet requested
+                for (int i = 0; i < allInterestingPieces.size(); i++) {
+                    if (peer.getRequestedPiecesFromNeighbors().containsValue(allInterestingPieces.get(i))) {
+                        allInterestingPieces.remove(allInterestingPieces.get(i));
+                    }
+                }
+
+                Random random = new Random();
+                int temp = 0;
+                temp = allInterestingPieces.get(random.nextInt(allInterestingPieces.size()));
+
+                outByte = new ByteArrayOutputStream();
+                messageLength = new byte[4];
+                messageLength =  ByteBuffer.allocate(4).putInt(1 + 4).array();
+
+                messageTypeArr = new byte[1];
+                messageTypeArr[0] = (byte) messageType;
+
+                messagePayload = ByteBuffer.allocate(4).putInt(temp).array();
+
+                try {
+                    outByte.write(messageLength);
+                    outByte.write(messageTypeArr);
+                    outByte.write(messagePayload);
+                    outByte.close();
+                    return outByte.toByteArray();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
                 break;
             case 7:
                 //piece
+                outByte = new ByteArrayOutputStream();
+                messageLength = new byte[4];
+                messageLength =  ByteBuffer.allocate(4).putInt(1 + 4).array();
 
-                peer.addDownloadedPieceToDownloadedFromNeighborMap(connectedPeerID);
+                messageTypeArr = new byte[1];
+                messageTypeArr[0] = (byte) messageType;
+
+                messagePayload = ByteBuffer.allocate(4).putInt(payload).array();
+
+                try {
+                    outByte.write(messageLength);
+                    outByte.write(messageTypeArr);
+                    outByte.write(messagePayload);
+                    outByte.close();
+                    return outByte.toByteArray();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
                 break;
             default:
                 System.out.println("Invalid message type when trying to create message.");
@@ -149,10 +193,14 @@ public class MessageManager implements Runnable{
                         case 0:
                             //choke
                             logManager.createLog(peer.getPeerID(), connectedPeerID, "choking", 1);
+                            if (peer.getRequestedPiecesFromNeighbors().containsKey(connectedPeerID)) {
+                                peer.removeRequestedPiecesFromNeighbors(connectedPeerID);
+                            }
                             break;
                         case 1:
                             //unchoke
                             logManager.createLog(peer.getPeerID(), connectedPeerID, "unchoking", 1);
+                            sendMessage(createMessage(6, -1));
                             break;
                         case 2:
                             //interested
@@ -181,10 +229,10 @@ public class MessageManager implements Runnable{
                             //check if you want it
                             if (peer.checkIfPeerHasPieceAtIndex(haveIndex)) {
                                 //not interested - already has piece
-                                sendMessage(createMessage(3));
+                                sendMessage(createMessage(3, -1));
                             } else {
                                 //interested
-                                sendMessage(createMessage(2));
+                                sendMessage(createMessage(2, -1));
                             }
                             break;
                         case 5:
@@ -196,17 +244,22 @@ public class MessageManager implements Runnable{
                             peer.setNeighborBitfields(connectedPeerID, neighborBitFieldGiven);
                             if (peer.checkNeighborBitfieldForInterestingPieces(connectedPeerID)) {
                                 //contains at least 1 interesting piece
-                                sendMessage(createMessage(2));
+                                sendMessage(createMessage(2, -1));
                             } else {
                                 //bitfields are the same - no interesting pieces
-                                sendMessage(createMessage(3));
+                                sendMessage(createMessage(3, -1));
                             }
                             break;
                         case 6:
                             //request
+                            //receive req, send piece
+                            int requestedPieceIndex = ByteBuffer.wrap(Arrays.copyOfRange(inputMsg, 5, 9)).getInt();
+                            sendMessage(createMessage(7, requestedPieceIndex));
                             break;
                         case 7:
                             //piece
+                            //receive piece, send new request
+                            peer.addDownloadedPieceToDownloadedFromNeighborMap(connectedPeerID);
                             break;
                         default:
                             //handshake
@@ -218,7 +271,7 @@ public class MessageManager implements Runnable{
                                 System.out.println("Handshake is good for Peer #" + peer.getPeerID() + " with Peer #" + connectedPeerID + "!");
                                 //send bitfield msg
                                 if (peer.getFilePresent()) {
-                                    sendMessage(createMessage(5));
+                                    sendMessage(createMessage(5, -1));
                                 }
                             }
                             break;

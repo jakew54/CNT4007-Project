@@ -13,7 +13,7 @@ public class Peer {
     private int peerPortNum;
     private boolean filePresent;
     private byte[] bitField;
-    private byte[][] fileData; //first index is byte in bitfield, second index is bit within that byte
+    private byte[] fileData; //first index is byte in bitfield, second index is bit within that byte
     private int numPreferredNeighbors;
     private int unchokingInterval;
     private int optimisticUnchokingInterval;
@@ -22,6 +22,7 @@ public class Peer {
     private int pieceSize;
 
 
+    private Vector<Integer> connectedPeers = new Vector<>();
     private Vector<Integer> interestedNeighbors = new Vector<>();
     private Vector<Integer> preferredNeighbors;
     private Vector<Integer> chokedNeighbors;
@@ -29,6 +30,8 @@ public class Peer {
     private HashMap<Integer, Integer> numPiecesDownloadedFromNeighbor = new HashMap<>(); // <neighborID, numDownloaded>
     private int optimisticUnchokedNeighborID;
     private HashMap<Integer, Boolean> isChokedList = new HashMap<Integer, Boolean>();
+    private HashMap<Integer, MessageManager> msgManagerList = new HashMap<>();
+    private HashMap<Integer, Integer> requestedPiecesFromNeighbors = new HashMap<>(); // <neighborID, pieceIndex>
 
 
 
@@ -39,6 +42,27 @@ public class Peer {
         this.peerIP = peerIP;
         this.peerPortNum = peerPortNum;
         this.filePresent = filePresent;
+        this.optimisticUnchokedNeighborID = 0;
+    }
+
+    public void setRequestedPiecesFromNeighbors(int neighborID, int pieceIndex) {
+        requestedPiecesFromNeighbors.put(neighborID, pieceIndex);
+    }
+
+    public HashMap<Integer, Integer> getRequestedPiecesFromNeighbors() {
+        return requestedPiecesFromNeighbors;
+    }
+
+    public void removeRequestedPiecesFromNeighbors(int neighborID) {
+        requestedPiecesFromNeighbors.remove(neighborID);
+    }
+
+    public void addConnectedPeer(Integer connectedID) {
+        this.connectedPeers.add(connectedID);
+    }
+
+    public Vector<Integer> getConnectedPeers() {
+        return connectedPeers;
     }
 
     public void addDownloadedPieceToDownloadedFromNeighborMap(int neighborID) {
@@ -125,17 +149,49 @@ public class Peer {
             }
         }
         //TODO maybe don't log if list hasn't changed
-        //log change of preferred neighbors
-        //choke any neighbors that are unchoked but not in preferredNeighbors && not optimistically unchoked
-        //send choke messages
-        //unchoke any neighbors in preferredNeighbors that are choked
-        //send unchoke messages
+        for (int i = 0; i < connectedPeers.size(); i++) {
+            if (!(chokedNeighbors.contains(connectedPeers.get((i))))) {
+                if (!(preferredNeighbors.contains(connectedPeers.get(i))) && !(connectedPeers.get(i) == optimisticUnchokedNeighborID)) {
+                    msgManagerList.get(connectedPeers.get(i)).sendMessage(msgManagerList.get(connectedPeers.get(i)).createMessage(0, -1));
+                    chokedNeighbors.add(connectedPeers.get(i));
+                }
+            }
+        }
+        for (int i = 0; i < preferredNeighbors.size(); i++) {
+            if (chokedNeighbors.contains(preferredNeighbors.get(i))) {
+                msgManagerList.get(preferredNeighbors.get(i)).sendMessage(msgManagerList.get(preferredNeighbors.get(i)).createMessage(1, -1));
+                chokedNeighbors.remove(preferredNeighbors.get(i));
+            }
+        }
         return;
     }
 
     public void calculateOptimisticallyUnchokedNeighbor() {
-        //get a list of the interestedNeighbors that are not contained within the preferredNeighbors
-        //then randomly choose one from this list to be unchoked
+        Vector<Integer> tempChokedandInterested = new Vector<>();
+        for (int i = 0; i < Math.min(chokedNeighbors.size(), interestedNeighbors.size()); i++) {
+            if (chokedNeighbors.size() <= interestedNeighbors.size()) {
+                if (interestedNeighbors.contains(chokedNeighbors.get(i))) {
+                    tempChokedandInterested.add(chokedNeighbors.get(i));
+                }
+            } else {
+                if (chokedNeighbors.contains(interestedNeighbors.get(i))) {
+                    tempChokedandInterested.add(interestedNeighbors.get(i));
+                }
+            }
+        }
+
+        Random random = new Random();
+        int temp = tempChokedandInterested.get(random.nextInt(tempChokedandInterested.size()));
+
+        if (optimisticUnchokedNeighborID > 0) {
+            msgManagerList.get(optimisticUnchokedNeighborID).sendMessage(msgManagerList.get(optimisticUnchokedNeighborID).createMessage(0, -1));
+            chokedNeighbors.add(optimisticUnchokedNeighborID);
+        }
+
+        optimisticUnchokedNeighborID = temp;
+        chokedNeighbors.remove(temp);
+        msgManagerList.get(optimisticUnchokedNeighborID).sendMessage(msgManagerList.get(optimisticUnchokedNeighborID).createMessage(1, -1));
+        return;
     }
 
     public void addNeighborBitfield(int neighborID) {
@@ -185,6 +241,18 @@ public class Peer {
             }
         }
         return false;
+    }
+
+    public Vector<Integer> getNeighborBitfieldForAllInterestingPieces(int neighborID) {
+        Vector<Integer> temp = new Vector<>();
+        for (int i = 0; i < bitField.length; i++) {
+            for (int j = 0; j < 8; j++) {
+                if((bitField[i] >> j & 1) != ((neighborBitfields.get(neighborID))[i] >> j & 1)) {
+                    temp.add((i*8) + j);
+                }
+            }
+        }
+        return temp;
     }
 
     public int getPeerID() {
@@ -317,4 +385,15 @@ public class Peer {
         return total;
     }
 
+    public void addMsgManagerToList(int neighborID, MessageManager msgMan) {
+        msgManagerList.put(neighborID, msgMan);
+    }
+
+    public HashMap<Integer, MessageManager> getMsgManagerList() {
+        return msgManagerList;
+    }
+
+    public void setFileData(byte[] fileData, int size) {
+        this.fileData = Arrays.copyOf(fileData, size);
+    }
 }

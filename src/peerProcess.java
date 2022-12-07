@@ -1,10 +1,13 @@
 
 import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
 
 public class peerProcess {
-    public static void main(String arg[]) throws FileNotFoundException {
+    public static void main(String arg[]) throws IOException {
         HashMap<Integer, Peer> peers = new HashMap<Integer, Peer>();
         PeerInfo peerInfo = new PeerInfo();
         Common commonInfo = new Common();
@@ -17,11 +20,13 @@ public class peerProcess {
             tempPeer.setUnchokingInterval(commonInfo.getUnchokingInterval());
             tempPeer.setOptimisticUnchokingInterval(commonInfo.getOptimisticChokingInterval());
             tempPeer.setFileName(commonInfo.getFilename());
-            if (tempPeer.getFilePresent()) {
-                //load file somehow
-            }
             tempPeer.setFileSize(commonInfo.getFileSize());
             tempPeer.setPieceSize(commonInfo.getPieceSize());
+            if (tempPeer.getFilePresent()) {
+                String filePath = "peer_" + tempPeer.getPeerID() + "/" + commonInfo.getFilename();
+                byte[] fileBytes = Files.readAllBytes(Paths.get(filePath));
+                tempPeer.setFileData(fileBytes, commonInfo.getBitFieldSize());
+            }
             peers.put(peerInfo.getPeers().get(i).getPeerID(), peerInfo.getPeers().get(i));
         }
 
@@ -45,6 +50,11 @@ public class peerProcess {
         }
         System.out.println("Peer #" + peerID + " host duties fulfilled!");
 
+        //TODO thread sitch
+        //all on thread
+        //calculatePreferredNeighbors()
+        //LogManager logging = new LogManager(peer);
+        //logging.createLog(peer.getPeerID(), connectedPeerID, "changePrefNeighbors", 1); //connectedPeerID is set in MsgManager
 
     }
 }

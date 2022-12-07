@@ -21,6 +21,9 @@ public class Client {
             MessageManager msgManager = new MessageManager(peer, out, in);
             Thread msgThread = new Thread(msgManager);
             msgThread.start();
+            peer.addConnectedPeer(hostPeer.getPeerID());
+            hostPeer.addConnectedPeer(peer.getPeerID());
+            peer.addMsgManagerToList(hostPeer.getPeerID(), msgManager);
 
 
 

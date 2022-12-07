@@ -26,7 +26,7 @@ public class Server implements Runnable {
 
     public void run() {
         System.out.println("Enters run() of Server...");
-       serverSocket = createServerSocket(peer);
+        serverSocket = createServerSocket(peer);
         try {
 
             while (true) {
@@ -42,6 +42,13 @@ public class Server implements Runnable {
                 Thread msgThread = new Thread(msgManager);
                 msgThread.start();
                 System.out.println("Starts msgThread");
+                int connectingPeerID = 0;
+                for (int i = 0; i < peer.getConnectedPeers().size(); i++) {
+                    if (!(peer.getMsgManagerList().containsKey(peer.getConnectedPeers().get(i)))) {
+                        connectingPeerID = peer.getConnectedPeers().get(i);
+                    }
+                }
+                peer.addMsgManagerToList(connectingPeerID, msgManager);
             }
         } catch (IOException e) {
             System.err.println("serverSocket.accept() IO error (Server.java)");
