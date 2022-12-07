@@ -30,7 +30,7 @@ public class Peer {
     private HashMap<Integer, Integer> numPiecesDownloadedFromNeighbor = new HashMap<>(); // <neighborID, numDownloaded>
     private int optimisticUnchokedNeighborID;
     private HashMap<Integer, Boolean> isChokedList = new HashMap<Integer, Boolean>();
-    private HashMap<Integer, MessageManager> msgManagerList = new HashMap<>();
+    private Vector<MessageManager> msgManagerList = new Vector<>();
     private HashMap<Integer, Integer> requestedPiecesFromNeighbors = new HashMap<>(); // <neighborID, pieceIndex>
 
 
@@ -145,6 +145,7 @@ public class Peer {
                         if (entry.getValue() > max) {
                             currMaxIDs.clear();
                             max = entry.getValue();
+                            System.out.println("Printing max: " + max);
                             currMaxIDs.add(entry.getKey());
                         } else if (entry.getValue().equals(max)) {
                             currMaxIDs.add(entry.getKey());
@@ -154,6 +155,7 @@ public class Peer {
                         Random random = new Random();
                         int temp = random.nextInt(currMaxIDs.size());
                         preferredNeighbors.add(currMaxIDs.get(temp));
+                        System.out.println("CurrMaxID: " + currMaxIDs.get(temp));
                         neighborDownloadTimes.remove(currMaxIDs.get(temp));
                     }
                 }
@@ -164,22 +166,29 @@ public class Peer {
                 for (int i = 0; i < Math.min(numPreferredNeighbors, interestedNeighbors.size()); i++) {
                     Random random = new Random();
                     int temp = random.nextInt(intNeighborsTemp.size());
-                    preferredNeighbors.add(temp);
+                    System.out.println("If file is present for loop: " + intNeighborsTemp.get(temp));
+                    preferredNeighbors.add(intNeighborsTemp.get(temp));
                     intNeighborsTemp.remove(temp);
                 }
             }
             //TODO maybe don't log if list hasn't changed
             for (int i = 0; i < connectedPeers.size(); i++) {
+                System.out.println("enters connectedPeers for loop");
                 if (!(chokedNeighbors.contains(connectedPeers.get((i))))) {
+
                     if (!(preferredNeighbors.contains(connectedPeers.get(i))) && !(connectedPeers.get(i) == optimisticUnchokedNeighborID)) {
-                        msgManagerList.get(connectedPeers.get(i)).sendMessage(msgManagerList.get(connectedPeers.get(i)).createMessage(0, -1));
+                        System.out.println("Enters 2nd if of connected peers");
+                        msgManagerList.get(findMsgManagerFromNeighborID(connectedPeers.get(i))).sendMessage(msgManagerList.get(findMsgManagerFromNeighborID(connectedPeers.get(i))).createMessage(0, -1));
                         chokedNeighbors.add(connectedPeers.get(i));
                     }
                 }
             }
             for (int i = 0; i < preferredNeighbors.size(); i++) {
                 if (chokedNeighbors.contains(preferredNeighbors.get(i))) {
-                    msgManagerList.get(preferredNeighbors.get(i)).sendMessage(msgManagerList.get(preferredNeighbors.get(i)).createMessage(1, -1));
+                    System.out.println("enters if choked neighbors statement");
+                    System.out.println(preferredNeighbors.get(i)==null);
+                    System.out.println(msgManagerList.get(findMsgManagerFromNeighborID(preferredNeighbors.get(i))) == null);
+                    msgManagerList.get(findMsgManagerFromNeighborID(preferredNeighbors.get(i))).sendMessage(msgManagerList.get(findMsgManagerFromNeighborID(preferredNeighbors.get(i))).createMessage(1, -1));
                     chokedNeighbors.remove(preferredNeighbors.get(i));
                 }
             }
@@ -191,7 +200,8 @@ public class Peer {
     }
 
     public void calculateOptimisticallyUnchokedNeighbor() {
-        if (!interestedNeighbors.isEmpty()) {
+
+        if (interestedNeighbors.size() > numPreferredNeighbors) {
             Vector<Integer> tempChokedandInterested = new Vector<>();
             for (int i = 0; i < Math.min(chokedNeighbors.size(), interestedNeighbors.size()); i++) {
                 if (chokedNeighbors.size() <= interestedNeighbors.size()) {
@@ -211,13 +221,13 @@ public class Peer {
                 temp = tempChokedandInterested.get(random.nextInt(tempChokedandInterested.size()));
 
                 if (optimisticUnchokedNeighborID > 0) {
-                    msgManagerList.get(optimisticUnchokedNeighborID).sendMessage(msgManagerList.get(optimisticUnchokedNeighborID).createMessage(0, -1));
+                    msgManagerList.get(findMsgManagerFromNeighborID(optimisticUnchokedNeighborID)).sendMessage(msgManagerList.get(findMsgManagerFromNeighborID(optimisticUnchokedNeighborID)).createMessage(0, -1));
                     chokedNeighbors.add(optimisticUnchokedNeighborID);
                 }
 
                 optimisticUnchokedNeighborID = temp;
                 chokedNeighbors.remove(temp);
-                msgManagerList.get(optimisticUnchokedNeighborID).sendMessage(msgManagerList.get(optimisticUnchokedNeighborID).createMessage(1, -1));
+                msgManagerList.get(findMsgManagerFromNeighborID(optimisticUnchokedNeighborID)).sendMessage(msgManagerList.get(findMsgManagerFromNeighborID(optimisticUnchokedNeighborID)).createMessage(1, -1));
             }
         }
         return;
@@ -414,12 +424,23 @@ public class Peer {
         return total;
     }
 
-    public void addMsgManagerToList(int neighborID, MessageManager msgMan) {
-        msgManagerList.put(neighborID, msgMan);
+    public void addMsgManagerToList(MessageManager msgMan) {
+        msgManagerList.add(msgMan);
     }
 
-    public HashMap<Integer, MessageManager> getMsgManagerList() {
+    public Vector<MessageManager> getMsgManagerList() {
         return msgManagerList;
+    }
+
+    public int findMsgManagerFromNeighborID(int neighborID){
+
+        for (int i = 0; i < msgManagerList.size(); i++){
+            if (msgManagerList.get(i).getConnectedPeerID() == neighborID){
+                return i;
+            }
+        }
+        System.out.println("findMsgManagerFromNeighborID failed to find matching index");
+        return -1;
     }
 
     public void createFileData(int numPiece) {
@@ -432,5 +453,9 @@ public class Peer {
 
     public byte[] getFileDataAtIndex(int pieceIndex) {
         return this.fileData[pieceIndex];
+    }
+
+    public void updateChokedNeighbors(int neighborID){
+        this.chokedNeighbors.add(neighborID);
     }
 }

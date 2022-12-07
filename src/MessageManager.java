@@ -23,6 +23,9 @@ public class MessageManager implements Runnable{
         this.logManager = new LogManager(peer);
     }
 
+    public int getConnectedPeerID(){
+        return this.connectedPeerID;
+    }
     public boolean allPeersDoNotHaveFile() {
 
         if (peer.getNeighborBitfields().isEmpty()){
@@ -306,9 +309,10 @@ public class MessageManager implements Runnable{
                             peer.updateBitField(pieceIndexReceived);
                             peer.removeRequestedPiecesFromNeighbors(pieceIndexReceived);
                             peer.addDownloadedPieceToDownloadedFromNeighborMap(connectedPeerID);
-                            for (Map.Entry<Integer, MessageManager> p : peer.getMsgManagerList().entrySet()) {
+                            for (int i = 0; i < peer.getMsgManagerList().size(); i++) {
                                 //sending have to everyone because peer got a new piece
-                                p.getValue().sendMessage(p.getValue().createMessage(4,pieceIndexReceived));
+                                peer.getMsgManagerList().get(i).sendMessage(peer.getMsgManagerList().get(i).createMessage(4, pieceIndexReceived));
+
                             }
                             //TODO not done
                             break;
@@ -326,6 +330,7 @@ public class MessageManager implements Runnable{
                                 }
                             }
                             peer.addNeighborToDownloadedPieceFromNeighborMap(connectedPeerID);
+                            peer.updateChokedNeighbors(connectedPeerID);
                             break;
                     }
                 } catch (IOException ioE) {

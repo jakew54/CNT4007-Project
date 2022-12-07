@@ -23,7 +23,7 @@ public class Client {
             msgThread.start();
             peer.addConnectedPeer(hostPeer.getPeerID());
             hostPeer.addConnectedPeer(peer.getPeerID());
-            peer.addMsgManagerToList(hostPeer.getPeerID(), msgManager);
+            peer.addMsgManagerToList(msgManager);
 
 
 

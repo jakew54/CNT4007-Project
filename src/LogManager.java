@@ -65,15 +65,15 @@ public class LogManager {
                 clientLog += Integer.toString(clientID);
                 if (!peer.getPreferredNeighbors().isEmpty()) {
                     clientLog += " has the preferred neighbors ";
-                    String tempNeighbors = "";
-                    Vector<Integer> tempNeighborsVec = peer.getPreferredNeighbors();
-                    for (int i = 0; i < tempNeighborsVec.size(); i++) {
-                        tempNeighbors += Integer.toString(tempNeighborsVec.get(i));
-                        if (i < tempNeighborsVec.size() - 1) {
-                            tempNeighbors += ",";
+                    String preferredNeighborsString = "";
+
+                    for (int i = 0; i < peer.getPreferredNeighbors().size(); i++) {
+                        preferredNeighborsString += Integer.toString(peer.getPreferredNeighbors().get(i));
+                        if (i < peer.getPreferredNeighbors().size() - 1) {
+                            preferredNeighborsString += ",";
                         }
                     }
-                    clientLog += tempNeighbors;
+                    clientLog += preferredNeighborsString;
                 } else {
                     clientLog += " has no preferred neighbors";
                 }
