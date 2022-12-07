@@ -16,6 +16,7 @@ public class peerProcess {
         Peer tempPeer;
         for (int i = 0; i < peerInfo.getPeers().size(); i++) {
             tempPeer = peerInfo.getPeers().get(i);
+            tempPeer.setNumofPieces(commonInfo.getNumOfPieces());
             tempPeer.createBitField(commonInfo.getBitFieldSize(), commonInfo.getNumOfPieces());
             tempPeer.setNumPreferredNeighbors(commonInfo.getNumOfPreferredNeighbors());
             tempPeer.setUnchokingInterval(commonInfo.getUnchokingInterval());

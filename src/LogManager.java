@@ -129,6 +129,16 @@ public class LogManager {
                 clientLog += Integer.toString(hostID);
                 clientLog += ".";
                 break;
+            case "receiveRequest":
+                clientLog += timeStamp;
+                clientLog += ": Peer ";
+                clientLog += Integer.toString(clientID);
+                clientLog += " received the 'request' message from ";
+                clientLog += Integer.toString(hostID);
+                clientLog += "for piece ";
+                clientLog += Integer.toString(filler);
+                clientLog += ".";
+                break;
             case "receiveBitfield":
                 clientLog += timeStamp;
                 clientLog += ": Peer ";

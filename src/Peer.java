@@ -20,6 +20,7 @@ public class Peer {
     private String fileName;
     private int fileSize;
     private int pieceSize;
+    private int numOfPieces;
 
 
     private Vector<Integer> connectedPeers = new Vector<>();
@@ -103,6 +104,21 @@ public class Peer {
         int pieceIndex2 = pieceIndex % 8;
         bitField[pieceIndex1] = (byte) (bitField[pieceIndex1] | (1 << pieceIndex2));
         return;
+    }
+
+    public boolean checkIfBitFieldIsFull() {
+        int possibleExtraBitsHandler = 0;
+        for (int i = 0; i < bitField.length; i++) {
+            if (i == bitField.length - 1) {
+                possibleExtraBitsHandler = bitField.length - numOfPieces;
+            }
+            for (int j = 0; j < 8 - possibleExtraBitsHandler; j++) {
+                if ((bitField[i] >> j & 1) == 0) {
+                    return false;
+                }
+            }
+        }
+        return true;
     }
 
     public void addInterestedNeighbor(int interestedPeerID) {
@@ -457,5 +473,17 @@ public class Peer {
 
     public void updateChokedNeighbors(int neighborID){
         this.chokedNeighbors.add(neighborID);
+    }
+
+    public void writeDataToFile() throws IOException {
+        String destinationFileName = "/peer_" + peerID + "/tree.jpg";
+        FileOutputStream fos = new FileOutputStream(destinationFileName);
+        for (int i = 0; i < fileData.length; i++) {
+            fos.write(fileData[i]);
+        }
+    }
+
+    public void setNumofPieces(int num) {
+        this.numOfPieces = num;
     }
 }

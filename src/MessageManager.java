@@ -300,6 +300,7 @@ public class MessageManager implements Runnable{
                             //receive req, send piece
                             int requestedPieceIndex = ByteBuffer.wrap(Arrays.copyOfRange(inputMsg, 5, 9)).getInt();
                             sendMessage(createMessage(7, requestedPieceIndex));
+                            logManager.createLog(peer.getPeerID(), connectedPeerID, "receiveRequest", requestedPieceIndex);
                             break;
                         case 7:
                             //piece
@@ -352,6 +353,10 @@ public class MessageManager implements Runnable{
                     System.err.println("IOexception oh no");
                 } catch (ClassNotFoundException cnfE) {
                     System.err.println("ClassNotFoundException darnit");
+                }
+                if (peer.checkIfBitFieldIsFull()) {
+                    peer.setFilePresent(true);
+                    peer.writeDataToFile();
                 }
             }
             System.out.println("End of while loop");
