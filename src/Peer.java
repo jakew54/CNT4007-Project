@@ -4,14 +4,9 @@ import java.nio.*;
 import java.nio.channels.*;
 import java.util.*;
 
+import static java.lang.Math.random;
+
 public class Peer {
-
-    //MAP: peer 1006
-    // Keys: IDS (int)   VALUES: isChoked ()
-    //1. 1001,false
-    //2. 1002,true
-    //3. 1003,true
-
 
     private int peerID;
     private String peerIP;
@@ -25,16 +20,15 @@ public class Peer {
     private String fileName;
     private int fileSize;
     private int pieceSize;
-    private int numBytesDownloadedInInterval;
 
 
-    private Hashtable<Integer, Peer> peerMap = new Hashtable<Integer, Peer>();
     private Vector<Integer> interestedNeighbors = new Vector<>();
-    private Vector<Integer> preferredNeighbors = new Vector<>();
+    private Vector<Integer> preferredNeighbors;
+    private Vector<Integer> chokedNeighbors;
     private HashMap<Integer, byte[]> neighborBitfields = new HashMap<>();
+    private HashMap<Integer, Integer> numPiecesDownloadedFromNeighbor = new HashMap<>(); // <neighborID, numDownloaded>
     private int optimisticUnchokedNeighborID;
-    private Map<Integer, Boolean> isChokedList = new HashMap<Integer, Boolean>();
-    private Map<Integer, Boolean> isHandshakedList = new HashMap<Integer, Boolean>();
+    private HashMap<Integer, Boolean> isChokedList = new HashMap<Integer, Boolean>();
 
 
 
@@ -45,7 +39,10 @@ public class Peer {
         this.peerIP = peerIP;
         this.peerPortNum = peerPortNum;
         this.filePresent = filePresent;
-        this.numBytesDownloadedInInterval = 0;
+    }
+
+    public void addDownloadedPieceToDownloadedFromNeighborMap(int neighborID) {
+        numPiecesDownloadedFromNeighbor.put(neighborID, numPiecesDownloadedFromNeighbor.get(neighborID) + 1);
     }
 
     public void createBitField(int size, int numPieces) {
@@ -86,8 +83,59 @@ public class Peer {
     }
 
     public void calculatePreferredNeighbors() {
-        int time = 0; //idk how to calculate time yet
+        preferredNeighbors.clear();
+        if (!filePresent) {
+            HashMap<Integer, Float> neighborDownloadTimes = new HashMap<>();
 
+            for (Map.Entry<Integer, Integer> p : numPiecesDownloadedFromNeighbor.entrySet()) {
+                neighborDownloadTimes.put(p.getKey(), ((float) p.getValue()) / ((float) unchokingInterval));
+            }
+
+            float max;
+            Vector<Integer> currMaxIDs = new Vector<>();
+            for (int i = 0; i < numPreferredNeighbors; i++) {
+                max = -1;
+                for (Map.Entry<Integer, Float> entry : neighborDownloadTimes.entrySet()) {
+                    if (entry.getValue() > max) {
+                        currMaxIDs.clear();
+                        max = entry.getValue();
+                        currMaxIDs.add(entry.getKey());
+                    } else if (entry.getValue().equals(max)) {
+                        currMaxIDs.add(entry.getKey());
+                    }
+                }
+                if (currMaxIDs.size() > 1) {
+                    Random random = new Random();
+                    int temp = random.nextInt(currMaxIDs.size());
+                    preferredNeighbors.add(currMaxIDs.get(temp));
+                    neighborDownloadTimes.remove(currMaxIDs.get(temp));
+                } else {
+                    preferredNeighbors.add(currMaxIDs.get(0));
+                    neighborDownloadTimes.remove(currMaxIDs.get(0));
+                }
+            }
+        } else { //file is present
+            //randomly choose from interested neighbors
+            Vector<Integer> intNeighborsTemp = (Vector) interestedNeighbors.clone();
+            for (int i = 0; i < numPreferredNeighbors; i++) {
+                Random random = new Random();
+                int temp = random.nextInt(intNeighborsTemp.size());
+                preferredNeighbors.add(temp);
+                intNeighborsTemp.remove(temp);
+            }
+        }
+        //TODO maybe don't log if list hasn't changed
+        //log change of preferred neighbors
+        //choke any neighbors that are unchoked but not in preferredNeighbors && not optimistically unchoked
+        //send choke messages
+        //unchoke any neighbors in preferredNeighbors that are choked
+        //send unchoke messages
+        return;
+    }
+
+    public void calculateOptimisticallyUnchokedNeighbor() {
+        //get a list of the interestedNeighbors that are not contained within the preferredNeighbors
+        //then randomly choose one from this list to be unchoked
     }
 
     public void addNeighborBitfield(int neighborID) {
@@ -102,6 +150,10 @@ public class Peer {
 
     public void setNeighborBitfields(int neighborID, byte[] givenBitfield) {
         neighborBitfields.put(neighborID, givenBitfield);
+    }
+
+    public HashMap<Integer, byte[]> getNeighborBitfields() {
+        return neighborBitfields;
     }
 
     public void updateNeighborBitfield(int neighborID, int pieceIndex) {
@@ -165,14 +217,6 @@ public class Peer {
 
     public void setFilePresent(boolean filePresent){
         this.filePresent=filePresent;
-    }
-
-    public void setPeerMap(Hashtable<Integer, Peer> peers) {
-        this.peerMap = peers;
-    }
-
-    public Hashtable<Integer, Peer> getPeerMap() {
-        return this.peerMap;
     }
 
     public void setNumPreferredNeighbors(int numPreferredNeighbors) {

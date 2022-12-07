@@ -24,9 +24,13 @@ public class MessageManager implements Runnable{
     }
 
     private boolean doAllHaveFile() {
-        for (Map.Entry<Integer, Peer> p : peer.getPeerMap().entrySet()) {
-            if (!p.getValue().getFilePresent()) {
-                return false;
+        for (Map.Entry<Integer, byte[]> p : peer.getNeighborBitfields().entrySet()) {
+            for (int i = 0; i < p.getValue().length; i++) {
+                for (int j = 0; j < 8; j++) {
+                    if((p.getValue()[i] >> j & 1) == 0) {
+                        return false;
+                    }
+                }
             }
         }
         return true;
@@ -120,6 +124,8 @@ public class MessageManager implements Runnable{
                 break;
             case 7:
                 //piece
+
+                peer.addDownloadedPieceToDownloadedFromNeighborMap(connectedPeerID);
                 break;
             default:
                 System.out.println("Invalid message type when trying to create message.");
@@ -142,22 +148,24 @@ public class MessageManager implements Runnable{
                     switch (currMsgType) {
                         case 0:
                             //choke
-
+                            logManager.createLog(peer.getPeerID(), connectedPeerID, "choking", 1);
                             break;
                         case 1:
                             //unchoke
+                            logManager.createLog(peer.getPeerID(), connectedPeerID, "unchoking", 1);
                             break;
                         case 2:
                             //interested
                             logManager.createLog(peer.getPeerID(), connectedPeerID, "receiveInterested", 1);
+                            peer.addInterestedNeighbor(connectedPeerID);
                             break;
                         case 3:
                             //not interested
                             logManager.createLog(peer.getPeerID(), connectedPeerID, "receiveNotInterested", 1);
+                            peer.removeInterestedNeighbor(connectedPeerID);
                             break;
                         case 4:
                             //have
-                            logManager.createLog(peer.getPeerID(), connectedPeerID, "receiveHave", 1);
                             int haveMsgSize = ByteBuffer.wrap(Arrays.copyOfRange(inputMsg, 0, 4)).getInt();
                             int haveIndex = ByteBuffer.wrap(Arrays.copyOfRange(inputMsg, 5, inputMsg.length)).getInt();
                             logManager.createLog(peer.getPeerID(), connectedPeerID, "receiveHave", haveIndex);

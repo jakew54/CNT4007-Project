@@ -1,11 +1,11 @@
 
 import java.io.FileNotFoundException;
-import java.util.Hashtable;
+import java.util.HashMap;
 import java.util.Map;
 
 public class peerProcess {
     public static void main(String arg[]) throws FileNotFoundException {
-        Hashtable<Integer, Peer> peers = new Hashtable<Integer, Peer>();
+        HashMap<Integer, Peer> peers = new HashMap<Integer, Peer>();
         PeerInfo peerInfo = new PeerInfo();
         Common commonInfo = new Common();
         int peerID;
@@ -17,13 +17,15 @@ public class peerProcess {
             tempPeer.setUnchokingInterval(commonInfo.getUnchokingInterval());
             tempPeer.setOptimisticUnchokingInterval(commonInfo.getOptimisticChokingInterval());
             tempPeer.setFileName(commonInfo.getFilename());
+            if (tempPeer.getFilePresent()) {
+                //load file somehow
+            }
             tempPeer.setFileSize(commonInfo.getFileSize());
             tempPeer.setPieceSize(commonInfo.getPieceSize());
             peers.put(peerInfo.getPeers().get(i).getPeerID(), peerInfo.getPeers().get(i));
         }
 
         peerID = Integer.parseInt(arg[0]);
-        peers.get(peerID).setPeerMap(peers);
         LogManager logger = new LogManager(peers.get(peerID));
 
         Server server = new Server(peers.get(peerID));
@@ -42,5 +44,7 @@ public class peerProcess {
             }
         }
         System.out.println("Peer #" + peerID + " host duties fulfilled!");
+
+
     }
 }
