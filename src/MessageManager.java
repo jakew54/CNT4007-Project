@@ -21,18 +21,30 @@ public class MessageManager implements Runnable{
         this.logManager = new LogManager(peer);
     }
 
-    public boolean doAllHaveFile() {
-        for (Map.Entry<Integer, byte[]> p : peer.getNeighborBitfields().entrySet()) {
-            for (int i = 0; i < p.getValue().length; i++) {
-                for (int j = 0; j < 8; j++) {
-                    if((p.getValue()[i] >> j & 1) == 0) {
-                        return false;
+    public boolean allPeersDoNotHaveFile() {
+
+        if (peer.getNeighborBitfields().isEmpty()){
+            return true;
+        }
+
+        if (peer.getFilePresent()) {
+            for (Map.Entry<Integer, byte[]> p : peer.getNeighborBitfields().entrySet()) {
+                for (int i = 0; i < p.getValue().length; i++) {
+                    for (int j = 0; j < 8; j++) {
+                        if ((p.getValue()[i] >> j & 1) == 0) {
+                            return true;
+                        }
                     }
                 }
             }
         }
-        return true;
+        else{
+            return true;
+        }
+        return false;
     }
+
+
 
     public void sendMessage(byte[] message) {
         try {
@@ -52,6 +64,7 @@ public class MessageManager implements Runnable{
         byte[] handShake1 = handShakeString.getBytes();
         byte[] handShake2 = new byte[10];
         byte[] handShake3 = ByteBuffer.allocate(4).putInt(peer.getPeerID()).array();
+        System.out.println("Right before handshake for loop");
         for (int i = 0; i < 32; i++) {
             if (i < 18) {
                 handShakeMsg[i] = handShake1[i];
@@ -61,6 +74,7 @@ public class MessageManager implements Runnable{
                 handShakeMsg[i] = handShake3[i - 28];
             }
         }
+        System.out.println("Before returning handShake");
         return handShakeMsg;
     }
 
@@ -184,11 +198,14 @@ public class MessageManager implements Runnable{
         try {
             byte[] handShakeMsg = handShake();
             sendMessage(handShakeMsg);
+            System.out.println("Finishes sending handshake message");
             int currMsgType = -1;
-            while (!doAllHaveFile()) {
+            while (allPeersDoNotHaveFile()) {
+                System.out.println("Enters doAllHaveFile while loop");
                 try {
                     byte[] inputMsg = (byte[]) in.readObject();
                     currMsgType = inputMsg[4];
+                    System.out.println("currMsgType: " + currMsgType);
                     switch (currMsgType) {
                         case 0:
                             //choke
@@ -282,11 +299,13 @@ public class MessageManager implements Runnable{
                     System.err.println("ClassNotFoundException darnit");
                 }
             }
-        }catch(Exception e){
+            System.out.println("End of while loop");
+        } catch(Exception e){
             System.out.println("Catch error");
             e.printStackTrace();
             //close any threads or whatever are still running (cleanup)
         }
+        System.out.println("After try and catch");
     }
 
 }

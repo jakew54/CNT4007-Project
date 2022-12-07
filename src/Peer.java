@@ -140,7 +140,8 @@ public class Peer {
             }
         } else { //file is present
             //randomly choose from interested neighbors
-            Vector<Integer> intNeighborsTemp = (Vector) interestedNeighbors.clone();
+            Vector<Integer> intNeighborsTemp = new Vector<>(interestedNeighbors);
+
             for (int i = 0; i < numPreferredNeighbors; i++) {
                 Random random = new Random();
                 int temp = random.nextInt(intNeighborsTemp.size());

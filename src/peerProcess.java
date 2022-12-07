@@ -3,6 +3,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -22,11 +23,15 @@ public class peerProcess {
             tempPeer.setFileName(commonInfo.getFilename());
             tempPeer.setFileSize(commonInfo.getFileSize());
             tempPeer.setPieceSize(commonInfo.getPieceSize());
+            //System.out.println("File Present: "+ tempPeer.getFilePresent());
             if (tempPeer.getFilePresent()) {
+                //System.out.println("Enter file present IF");
                 String filePath = "peer_" + tempPeer.getPeerID() + "/" + commonInfo.getFilename();
                 byte[] fileBytes = Files.readAllBytes(Paths.get(filePath));
                 tempPeer.setFileData(fileBytes, commonInfo.getBitFieldSize());
+                //System.out.println(Arrays.toString(fileBytes));
             }
+
             peers.put(peerInfo.getPeers().get(i).getPeerID(), peerInfo.getPeers().get(i));
         }
 

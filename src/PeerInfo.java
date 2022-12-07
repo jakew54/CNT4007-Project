@@ -51,6 +51,7 @@ public class PeerInfo {
 
             while (line!=null){
                 line = reader.readLine();
+                //System.out.println(line);
                 if (line==null){
                     break;
                 }
@@ -60,7 +61,7 @@ public class PeerInfo {
                 if (peerInfo[3].equals("1")){
                     filePresent = true;
                 }
-
+                //System.out.println("PeerID:" + peerInfo[0] + " PeerIP: " + peerInfo[1] + " PeerPortNum: " + peerInfo[2] + " File Present:" +filePresent);
                 peers.add(new Peer(parseInt(peerInfo[0]), peerInfo[1],parseInt(peerInfo[2]),filePresent));
             }
 
