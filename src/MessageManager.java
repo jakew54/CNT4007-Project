@@ -98,14 +98,14 @@ public class MessageManager implements Runnable{
     }
 
     public byte[] handShake() {
-        System.out.println("Enters handShake()");
+
         //handshake message
         byte[] handShakeMsg = new byte[32];
         String handShakeString = new String("P2PFILESHARINGPROJ");
         byte[] handShake1 = handShakeString.getBytes();
         byte[] handShake2 = new byte[10];
         byte[] handShake3 = ByteBuffer.allocate(4).putInt(peer.getPeerID()).array();
-        System.out.println("Right before handshake for loop");
+
         for (int i = 0; i < 32; i++) {
             if (i < 18) {
                 handShakeMsg[i] = handShake1[i];
@@ -115,7 +115,7 @@ public class MessageManager implements Runnable{
                 handShakeMsg[i] = handShake3[i - 28];
             }
         }
-        System.out.println("Before returning handShake");
+
         return handShakeMsg;
     }
 
@@ -248,14 +248,14 @@ public class MessageManager implements Runnable{
     }
 
     public void run() {
-        System.out.println("Enters msg manager run()");
+
         try {
             byte[] handShakeMsg = handShake();
             sendMessage(handShakeMsg);
-            System.out.println("Finishes sending handshake message");
+
             int currMsgType = -1;
             while (allPeersDoNotHaveFile()) {
-                System.out.println("Enters doAllHaveFile while loop");
+
                 try {
                     System.out.println("Is bit field 2 full: " + peer.checkIfBitField2IsFull(peer.getBitField2()));
                     if (peer.checkIfBitField2IsFull(peer.getBitField2()) && !peer.getFilePresent()) {
@@ -265,7 +265,7 @@ public class MessageManager implements Runnable{
                     byte[] inputMsg = (byte[]) in.readObject();
                     Vector<Integer> allInterestingPieces;
                     currMsgType = inputMsg[4];
-                    System.out.println("currMsgType: " + currMsgType);
+
                     switch (currMsgType) {
                         case 0:
                             //choke
@@ -380,7 +380,7 @@ public class MessageManager implements Runnable{
                             break;
                         default:
                             //handshake
-                            System.out.println("Enters default of Switch for handshake ");
+
                             byte[] possibleHandshakeHeader = Arrays.copyOfRange(inputMsg, 0, 18);
                             connectedPeerID = ByteBuffer.wrap(Arrays.copyOfRange(inputMsg, 28,32)).getInt();
                             String handshakerHeaderString = new String(possibleHandshakeHeader, StandardCharsets.UTF_8);
@@ -402,13 +402,13 @@ public class MessageManager implements Runnable{
                     System.err.println("ClassNotFoundException darnit");
                 }
             }
-            System.out.println("End of while loop");
+
         } catch(Exception e){
             System.out.println("Catch error");
             e.printStackTrace();
             //close any threads or whatever are still running (cleanup)
         }
-        System.out.println("After try and catch");
+
     }
 
 }

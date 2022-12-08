@@ -189,7 +189,7 @@ public class Peer {
         //neighbor and optimistically unchoked neighbor at the same time. This kind of situation is
         //allowed. In the next optimistic unchoking interval, another peer will be selected as an
         //optimistically unchoked neighbor.
-        System.out.println(interestedNeighbors);
+
         if (!interestedNeighbors.isEmpty()) {
             if (!(preferredNeighbors.isEmpty())) {
                 preferredNeighbors.clear();
@@ -214,7 +214,6 @@ public class Peer {
                         if (entry.getValue() > max) {
                             currMaxIDs.clear();
                             max = entry.getValue();
-                            System.out.println("Printing max: " + max);
                             currMaxIDs.add(entry.getKey());
                         } else if (entry.getValue().equals(max)) {
                             currMaxIDs.add(entry.getKey());
@@ -224,7 +223,6 @@ public class Peer {
                         Random random = new Random();
                         int temp = random.nextInt(currMaxIDs.size());
                         preferredNeighbors.add(currMaxIDs.get(temp));
-                        System.out.println("CurrMaxID: " + currMaxIDs.get(temp));
                         neighborDownloadTimes.remove(currMaxIDs.get(temp));
                     }
                 }
@@ -235,18 +233,15 @@ public class Peer {
                 for (int i = 0; i < Math.min(numPreferredNeighbors, interestedNeighbors.size()); i++) {
                     Random random = new Random();
                     int temp = random.nextInt(intNeighborsTemp.size());
-                    System.out.println("If file is present for loop: " + intNeighborsTemp.get(temp));
                     preferredNeighbors.add(intNeighborsTemp.get(temp));
                     intNeighborsTemp.remove(temp);
                 }
             }
             //TODO maybe don't log if list hasn't changed
             for (int i = 0; i < connectedPeers.size(); i++) {
-                System.out.println("enters connectedPeers for loop");
                 if (!(chokedNeighbors.contains(connectedPeers.get((i))))) {
 
                     if (!(preferredNeighbors.contains(connectedPeers.get(i))) && !(connectedPeers.get(i) == optimisticUnchokedNeighborID)) {
-                        System.out.println("Enters 2nd if of connected peers");
                         msgManagerList.get(findMsgManagerFromNeighborID(connectedPeers.get(i))).sendMessage(msgManagerList.get(findMsgManagerFromNeighborID(connectedPeers.get(i))).createMessage(0, -1));
                         chokedNeighbors.add(connectedPeers.get(i));
                     }
@@ -254,9 +249,6 @@ public class Peer {
             }
             for (int i = 0; i < preferredNeighbors.size(); i++) {
                 if (chokedNeighbors.contains(preferredNeighbors.get(i))) {
-                    System.out.println("enters if choked neighbors statement");
-                    System.out.println(preferredNeighbors.get(i)==null);
-                    System.out.println(msgManagerList.get(findMsgManagerFromNeighborID(preferredNeighbors.get(i))) == null);
                     msgManagerList.get(findMsgManagerFromNeighborID(preferredNeighbors.get(i))).sendMessage(msgManagerList.get(findMsgManagerFromNeighborID(preferredNeighbors.get(i))).createMessage(1, -1));
                     chokedNeighbors.remove(preferredNeighbors.get(i));
                 }

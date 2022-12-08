@@ -7,6 +7,7 @@ public class Client {
     private ObjectOutputStream out;
     private ObjectInputStream in;
     LogManager logger;
+    private Socket requestSocket;
 
     public Client(Peer peer, Peer hostPeer, LogManager logger) {
         this.peer = peer;
@@ -16,7 +17,7 @@ public class Client {
 
     public void connectPeer() {
         try {
-            Socket requestSocket = new Socket(hostPeer.getPeerIP(), hostPeer.getPeerPortNum());
+            requestSocket = new Socket(hostPeer.getPeerIP(), hostPeer.getPeerPortNum());
             in = new ObjectInputStream(requestSocket.getInputStream());
             out = new ObjectOutputStream(requestSocket.getOutputStream());
             out.flush();
