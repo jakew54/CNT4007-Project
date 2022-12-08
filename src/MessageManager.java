@@ -44,8 +44,8 @@ public class MessageManager implements Runnable{
         if (!peer.checkIfBitField2IsFull(peer.getBitField2())) {
             return true;
         }
-        for (int i = 0; i < peer.getNeighborBitFields2().size(); i++) {
-            if (!peer.checkIfBitField2IsFull(peer.getNeighborBitFields2().get(i))) {
+        for (Map.Entry<Integer, BitSet> p : peer.getNeighborBitFields2().entrySet()) {
+            if (!peer.checkIfBitField2IsFull(p.getValue())) {
                 return true;
             }
         }

@@ -1,3 +1,4 @@
+import java.util.BitSet;
 import java.util.Map;
 
 public class OptimisticUnchokingCalculator extends Thread{
@@ -11,24 +12,16 @@ public class OptimisticUnchokingCalculator extends Thread{
     }
 
     public boolean allPeersDoNotHaveFile() {
-
-        if (peer.getNeighborBitfields().isEmpty()){
+        if (peer.getNeighborBitFields2().isEmpty()) {
             return true;
         }
-
-        if (peer.getFilePresent()) {
-            for (Map.Entry<Integer, byte[]> p : peer.getNeighborBitfields().entrySet()) {
-                for (int i = 0; i < p.getValue().length; i++) {
-                    for (int j = 0; j < 8; j++) {
-                        if ((p.getValue()[i] >> j & 1) == 0) {
-                            return true;
-                        }
-                    }
-                }
+        if (!peer.checkIfBitField2IsFull(peer.getBitField2())) {
+            return true;
+        }
+        for (Map.Entry<Integer, BitSet> p : peer.getNeighborBitFields2().entrySet()) {
+            if (!peer.checkIfBitField2IsFull(p.getValue())) {
+                return true;
             }
-        }
-        else{
-            return true;
         }
         return false;
     }
