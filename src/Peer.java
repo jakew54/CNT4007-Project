@@ -532,8 +532,9 @@ public class Peer {
 
     public int getNumPiecesDownloaded() {
         int total = 0;
-        for (int i = 0; i < bitField.length; i++) {
-            if (bitField[i] == (byte) 1) {
+
+        for (int i = 0; i < numOfPieces; i++) {
+            if (bitField2.get(i)) {
                 total++;
             }
         }
