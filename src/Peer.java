@@ -88,6 +88,7 @@ public class Peer {
 
     public void setNeighborBitFields2(int neighborId) {
         neighborBitFields2.put(neighborId, new BitSet(numOfPieces));
+        neighborBitFields2.get(neighborId).set(0, numOfPieces, false);
     }
 
     public void updateNeighborBitfields2(int neighborID, int pieceIndex) {
