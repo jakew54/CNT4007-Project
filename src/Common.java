@@ -88,6 +88,10 @@ public class Common {
             String[] commonInfo = line.split(" ");
             String name = commonInfo[0];
             String value = commonInfo[1];
+            for (String c : commonInfo) {
+                System.out.print(c + " ");
+            }
+            System.out.println();
 
             if (name.equals("NumberOfPreferredNeighbors")) {
                 setNumOfPreferredNeighbors(Integer.parseInt(value));
@@ -115,6 +119,10 @@ public class Common {
                 commonInfo = line.split(" ");
                 name = commonInfo[0];
                 value = commonInfo[1];
+                for (String c : commonInfo) {
+                    System.out.print(c + " ");
+                }
+                System.out.println();
 
                 if (name.equals("NumberOfPreferredNeighbors")) {
                     setNumOfPreferredNeighbors(Integer.parseInt(value));
@@ -140,12 +148,6 @@ public class Common {
             if (numOfPieces % 8 != 0) {
                 bitFieldSize += 1;
             }
-
-
-
-
-
-
         } catch (IOException e){
             e.printStackTrace();
         }

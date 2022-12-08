@@ -46,7 +46,10 @@ public class PeerInfo {
             }
 
             Peer tempPeer = new Peer(parseInt(peerInfo[0]), peerInfo[1],parseInt(peerInfo[2]),filePresent);
-
+            for (String c : peerInfo) {
+                System.out.print(c + " ");
+            }
+            System.out.println();
             peers.add(tempPeer);
 
             while (line!=null){
@@ -57,6 +60,12 @@ public class PeerInfo {
                 }
 
                 peerInfo = line.split(" ");
+
+                for (String c : peerInfo) {
+                    System.out.print(c + " ");
+                }
+                System.out.println();
+
                  filePresent = false;
                 if (peerInfo[3].equals("1")){
                     filePresent = true;

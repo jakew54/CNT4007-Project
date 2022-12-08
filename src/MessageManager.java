@@ -252,17 +252,10 @@ public class MessageManager implements Runnable{
         try {
             byte[] handShakeMsg = handShake();
             sendMessage(handShakeMsg);
-            Vector<Integer> temp2 = new Vector<>();
 
             int currMsgType = -1;
             while (allPeersDoNotHaveFile2()) {
                 try {
-                    System.out.println("Is bit field 2 full: " + peer.checkIfBitField2IsFull(peer.getBitField2()));
-                    temp2 = peer.getIndecesOfFalse(peer.getBitField2());
-                    for (int i = 0; i < temp2.size(); i++) {
-                        System.out.print("Falses: " + temp2.get(i) + ", ");
-                    }
-                    System.out.println();
                     if (peer.checkIfBitField2IsFull(peer.getBitField2()) && !peer.getFilePresent()) {
                         peer.setFilePresent(true);
                         peer.writeDataToFile();
@@ -362,6 +355,7 @@ public class MessageManager implements Runnable{
                             peer.updateBitField2(pieceIndexReceived);
                             peer.removeRequestedPiecesFromNeighbors(pieceIndexReceived);
                             peer.addDownloadedPieceToDownloadedFromNeighborMap(connectedPeerID);
+                            logManager.createLog(peer.getPeerID(), connectedPeerID, "downloadingPiece", pieceIndexReceived);
                             for (int i = 0; i < peer.getMsgManagerList().size(); i++) {
                                 //sending have to everyone because peer got a new piece
                                 peer.getMsgManagerList().get(i).sendMessage(peer.getMsgManagerList().get(i).createMessage(4, pieceIndexReceived));
