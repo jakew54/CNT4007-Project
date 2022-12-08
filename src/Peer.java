@@ -69,12 +69,17 @@ public class Peer {
     }
 
     public boolean checkIfBitField2IsFull(BitSet currentBitField) {
-        for (int i = 0; i < numOfPieces; i++) {
-            if (!currentBitField.get(i)) {
-                return false;
-            }
+        if (currentBitField.nextClearBit(0) >= numOfPieces) {
+            return true;
+        } else {
+            return false;
         }
-        return true;
+//        for (int i = 0; i < numOfPieces; i++) {
+//            if (!currentBitField.get(i)) {
+//                return false;
+//            }
+//        }
+//        return true;
     }
 
     public HashMap<Integer, BitSet> getNeighborBitFields2() {
@@ -384,6 +389,16 @@ public class Peer {
         Vector<Integer> temp = new Vector<>();
         for (int i = 0; i < numOfPieces; i++) {
             if (bitField2.get(i) == false && neighborBitFields2.get(neighborID).get(i) == true) {
+                temp.add(i);
+            }
+        }
+        return temp;
+    }
+
+    public Vector<Integer> getIndecesOfFalse(BitSet bitSet) {
+        Vector<Integer> temp = new Vector<>();
+        for (int i =0; i < numOfPieces; i++) {
+            if (bitSet.get(i) == false) {
                 temp.add(i);
             }
         }
