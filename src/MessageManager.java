@@ -252,15 +252,15 @@ public class MessageManager implements Runnable{
         try {
             byte[] handShakeMsg = handShake();
             sendMessage(handShakeMsg);
-            Vector<Integer> temp = new Vector<>();
+            Vector<Integer> temp2 = new Vector<>();
 
             int currMsgType = -1;
             while (allPeersDoNotHaveFile2()) {
                 try {
                     System.out.println("Is bit field 2 full: " + peer.checkIfBitField2IsFull(peer.getBitField2()));
-                    temp = peer.getIndecesOfFalse(peer.getBitField2());
-                    for (int i = 0; i < temp.size(); i++) {
-                        System.out.print("Falses: " + temp.get(i) + ", ");
+                    temp2 = peer.getIndecesOfFalse(peer.getBitField2());
+                    for (int i = 0; i < temp2.size(); i++) {
+                        System.out.print("Falses: " + temp2.get(i) + ", ");
                     }
                     System.out.println();
                     if (peer.checkIfBitField2IsFull(peer.getBitField2()) && !peer.getFilePresent()) {
