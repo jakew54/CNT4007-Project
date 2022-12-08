@@ -134,6 +134,10 @@ public class Peer {
         } //0 is default value so we dont have to do anything with !filePresent
     }
 
+    public void createBitField2(int numPieces) {
+        bitField2 = new BitSet(numPieces);
+    }
+
     public void setBitField(byte[] bitField) {
         this.bitField = bitField;
     }
