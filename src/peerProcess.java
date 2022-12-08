@@ -17,7 +17,7 @@ public class peerProcess {
         for (int i = 0; i < peerInfo.getPeers().size(); i++) {
             tempPeer = peerInfo.getPeers().get(i);
             tempPeer.setNumofPieces(commonInfo.getNumOfPieces());
-            tempPeer.createBitField2(commonInfo.getNumOfPieces());
+            tempPeer.setBitField2();
             tempPeer.setNumPreferredNeighbors(commonInfo.getNumOfPreferredNeighbors());
             tempPeer.setUnchokingInterval(commonInfo.getUnchokingInterval());
             tempPeer.setOptimisticUnchokingInterval(commonInfo.getOptimisticChokingInterval());
@@ -51,7 +51,7 @@ public class peerProcess {
         peerID = Integer.parseInt(arg[0]);
         LogManager logger = new LogManager(peers.get(peerID));
 
-        Server server = new Server(peers.get(peerID));
+        Server server = new Server(peers.get(peerID), logger);
         Thread serverThread = new Thread(server);
         serverThread.start();
 
@@ -60,7 +60,7 @@ public class peerProcess {
 
         for (Map.Entry<Integer, Peer> p : peers.entrySet()) {
             if (p.getKey() < peerID) {
-                Client client = new Client(peers.get(peerID), p.getValue());
+                Client client = new Client(peers.get(peerID), p.getValue(), logger);
                 client.connectPeer();
                 //log
                 logger.createLog(peerID, p.getKey(), "tcpConnectionMade", 0);
@@ -69,9 +69,9 @@ public class peerProcess {
         System.out.println("Peer #" + peerID + " host duties fulfilled!");
 
         //TODO thread sitch
-        Thread threadPrefNeighbor = new PreferredNeighborsCalculator(peers.get(peerID));
+        Thread threadPrefNeighbor = new PreferredNeighborsCalculator(peers.get(peerID), logger);
         threadPrefNeighbor.start();
-        Thread threadOptimisticUnchoke = new OptimisticUnchokingCalculator(peers.get(peerID));
+        Thread threadOptimisticUnchoke = new OptimisticUnchokingCalculator(peers.get(peerID), logger);
         threadOptimisticUnchoke.start();
     }
 }

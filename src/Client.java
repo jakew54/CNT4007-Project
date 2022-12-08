@@ -6,10 +6,12 @@ public class Client {
     private Peer hostPeer;
     private ObjectOutputStream out;
     private ObjectInputStream in;
+    LogManager logger;
 
-    public Client(Peer peer, Peer hostPeer) {
+    public Client(Peer peer, Peer hostPeer, LogManager logger) {
         this.peer = peer;
         this.hostPeer = hostPeer;
+        this.logger = logger;
     }
 
     public void connectPeer() {
@@ -18,7 +20,7 @@ public class Client {
             in = new ObjectInputStream(requestSocket.getInputStream());
             out = new ObjectOutputStream(requestSocket.getOutputStream());
             out.flush();
-            MessageManager msgManager = new MessageManager(peer, out, in);
+            MessageManager msgManager = new MessageManager(peer, out, in, logger);
             Thread msgThread = new Thread(msgManager);
             msgThread.start();
             peer.addConnectedPeer(hostPeer.getPeerID());

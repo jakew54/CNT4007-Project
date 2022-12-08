@@ -7,6 +7,7 @@ public class Server implements Runnable {
     private ServerSocket serverSocket;
     private ObjectInputStream in;
     private ObjectOutputStream out;
+    private LogManager logger;
 
     private ServerSocket createServerSocket(Peer serverPeer) {
         System.out.println("Enters createServerSocket function");
@@ -20,8 +21,9 @@ public class Server implements Runnable {
         return null;
     }
 
-    public Server(Peer peer) {
+    public Server(Peer peer, LogManager logger) {
         this.peer = peer;
+        this.logger = logger;
     }
 
     public void run() {
@@ -37,7 +39,7 @@ public class Server implements Runnable {
                 out.flush();
                 in = new ObjectInputStream(acceptedSocket.getInputStream());
                 System.out.println("Done with creating in and out");
-                MessageManager msgManager = new MessageManager(peer, out, in);
+                MessageManager msgManager = new MessageManager(peer, out, in, logger);
                 System.out.println("Done with creating msg manager");
                 Thread msgThread = new Thread(msgManager);
                 msgThread.start();

@@ -134,10 +134,6 @@ public class Peer {
         } //0 is default value so we dont have to do anything with !filePresent
     }
 
-    public void createBitField2(int numPieces) {
-        bitField2 = new BitSet(numPieces);
-    }
-
     public void setBitField(byte[] bitField) {
         this.bitField = bitField;
     }
@@ -176,7 +172,11 @@ public class Peer {
 
     public void removeInterestedNeighbor(int nonInterestedPeerID) {
         if (interestedNeighbors.contains(nonInterestedPeerID)) {
-            interestedNeighbors.remove(nonInterestedPeerID);
+            for (int i = 0; i < interestedNeighbors.size(); i++) {
+                if (interestedNeighbors.get(i) == nonInterestedPeerID) {
+                    interestedNeighbors.remove(i);
+                }
+            }
         }
     }
 
@@ -189,20 +189,26 @@ public class Peer {
         //neighbor and optimistically unchoked neighbor at the same time. This kind of situation is
         //allowed. In the next optimistic unchoking interval, another peer will be selected as an
         //optimistically unchoked neighbor.
+        System.out.println(interestedNeighbors);
         if (!interestedNeighbors.isEmpty()) {
             if (!(preferredNeighbors.isEmpty())) {
                 preferredNeighbors.clear();
             }
             if (!filePresent) {
                 HashMap<Integer, Float> neighborDownloadTimes = new HashMap<>();
+                for (int i =0; i < interestedNeighbors.size(); i++) {
+                    neighborDownloadTimes.put(interestedNeighbors.get(i),(float) 0);
+                }
 
                 for (Map.Entry<Integer, Integer> p : numPiecesDownloadedFromNeighbor.entrySet()) {
-                    neighborDownloadTimes.put(p.getKey(), ((float) p.getValue()) / ((float) unchokingInterval));
+                    if (neighborDownloadTimes.containsKey(p.getKey())) {
+                        neighborDownloadTimes.put(p.getKey(), ((float) p.getValue()) / ((float) unchokingInterval));
+                    }
                 }
 
                 float max;
                 Vector<Integer> currMaxIDs = new Vector<>();
-                for (int i = 0; i < numPreferredNeighbors; i++) {
+                for (int i = 0; i < Math.min(numPreferredNeighbors, neighborDownloadTimes.size()); i++) {
                     max = -1;
                     for (Map.Entry<Integer, Float> entry : neighborDownloadTimes.entrySet()) {
                         if (entry.getValue() > max) {

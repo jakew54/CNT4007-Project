@@ -5,9 +5,9 @@ public class PreferredNeighborsCalculator extends Thread{
     private Peer peer;
     private LogManager logManager;
 
-    public PreferredNeighborsCalculator(Peer peer) {
+    public PreferredNeighborsCalculator(Peer peer, LogManager logger) {
         this.peer = peer;
-        this.logManager = new LogManager(peer);
+        this.logManager = logger;
     }
 
     public boolean allPeersDoNotHaveFile() {

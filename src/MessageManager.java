@@ -16,11 +16,11 @@ public class MessageManager implements Runnable{
     private byte[] bitMasks1;
     private byte[] bitMasks2;
 
-    public MessageManager(Peer peer, ObjectOutputStream out, ObjectInputStream in) throws IOException {
+    public MessageManager(Peer peer, ObjectOutputStream out, ObjectInputStream in, LogManager logger) throws IOException {
         this.peer = peer;
         this.in = in;
         this.out = out;
-        this.logManager = new LogManager(peer);
+        this.logManager = logger;
     }
 
     public BitSet bytesToBitSet(byte[] byteArr) {
@@ -257,7 +257,8 @@ public class MessageManager implements Runnable{
             while (allPeersDoNotHaveFile()) {
                 System.out.println("Enters doAllHaveFile while loop");
                 try {
-                    if (peer.checkIfBitField2IsFull(peer.getBitField2())) {
+                    System.out.println("Is bit field 2 full: " + peer.checkIfBitField2IsFull(peer.getBitField2()));
+                    if (peer.checkIfBitField2IsFull(peer.getBitField2()) && !peer.getFilePresent()) {
                         peer.setFilePresent(true);
                         peer.writeDataToFile();
                     }
@@ -315,12 +316,12 @@ public class MessageManager implements Runnable{
                             }
                             //check if you want it
                             //if (peer.checkIfPeerHasPieceAtIndex(haveIndex)) {
-                            if (peer.checkIfPeerHasPieceAtIndex2(haveIndex)) {
-                                //not interested - already has piece
-                                sendMessage(createMessage(3, -1));
-                            } else {
-                                //interested
+                            if (peer.checkNeighborBitfieldForInterestingPieces2(connectedPeerID)) {
+                                // interested
                                 sendMessage(createMessage(2, -1));
+                            } else {
+                                // not interested
+                                sendMessage(createMessage(3, -1));
                             }
                             break;
                         case 5:

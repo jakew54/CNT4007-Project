@@ -5,9 +5,9 @@ public class OptimisticUnchokingCalculator extends Thread{
     private Peer peer;
     private LogManager logManager;
 
-    public OptimisticUnchokingCalculator(Peer peer) {
+    public OptimisticUnchokingCalculator(Peer peer, LogManager logger) {
         this.peer = peer;
-        this.logManager = new LogManager(peer);
+        this.logManager = logger;
     }
 
     public boolean allPeersDoNotHaveFile() {
@@ -45,6 +45,7 @@ public class OptimisticUnchokingCalculator extends Thread{
                 }
             }
             peer.calculateOptimisticallyUnchokedNeighbor();
+            System.out.println("Checking bitfield2full: " + peer.checkIfBitField2IsFull(peer.getBitField2()));
             logManager.createLog(peer.getPeerID(), -1, "changeOptUnchokeNeighbor", -1);
             isFirstRun = false;
         }
